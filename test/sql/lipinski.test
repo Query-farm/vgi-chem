@@ -1,0 +1,45 @@
+# name: test/sql/lipinski.test
+# description: Lipinski rule-of-five breakdown table function
+# group: [vgi_chem]
+
+require-env VGI_CHEM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'chem' AS chem (TYPE vgi, LOCATION '${VGI_CHEM_WORKER}');
+
+# Aspirin: four rules, all passing (drug-like).
+query I
+SELECT count(*) FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');
+----
+4
+
+query I rowsort
+SELECT rule FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');
+----
+h_bond_acceptors
+h_bond_donors
+logp
+molecular_weight
+
+query I
+SELECT bool_and(passes) FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');
+----
+true
+
+# The molecular_weight rule value rounds to aspirin's MW.
+query I
+SELECT ROUND(value, 2) FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O') WHERE rule = 'molecular_weight';
+----
+180.16
+
+# Invalid SMILES -> no rows.
+query I
+SELECT count(*) FROM chem.lipinski('xyz');
+----
+0
+
+statement ok
+DETACH chem;

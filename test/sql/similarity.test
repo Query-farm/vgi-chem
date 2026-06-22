@@ -1,0 +1,52 @@
+# name: test/sql/similarity.test
+# description: Tanimoto similarity and substructure matching
+# group: [vgi_chem]
+
+require-env VGI_CHEM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'chem' AS chem (TYPE vgi, LOCATION '${VGI_CHEM_WORKER}');
+
+# ---- tanimoto ----
+
+# Self-similarity is exactly 1.0.
+query I
+SELECT chem.tanimoto('CC(=O)OC1=CC=CC=C1C(=O)O', 'CC(=O)OC1=CC=CC=C1C(=O)O');
+----
+1.0
+
+# A distinct pair is strictly less than 1.0.
+query I
+SELECT chem.tanimoto('CC(=O)OC1=CC=CC=C1C(=O)O', 'CN1C=NC2=C1C(=O)N(C(=O)N2C)C') < 1.0;
+----
+true
+
+# Invalid SMILES -> NULL.
+query I
+SELECT chem.tanimoto('CCO', 'xyz') IS NULL;
+----
+true
+
+# ---- substructure_match ----
+
+query I
+SELECT chem.substructure_match('c1ccccc1O', 'c1ccccc1');
+----
+true
+
+query I
+SELECT chem.substructure_match('CCO', 'c1ccccc1');
+----
+false
+
+# Invalid SMILES -> NULL.
+query I
+SELECT chem.substructure_match('xyz', 'c1ccccc1') IS NULL;
+----
+true
+
+statement ok
+DETACH chem;
