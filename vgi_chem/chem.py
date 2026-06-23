@@ -95,7 +95,7 @@ def canonical_smiles(smiles: str) -> str | None:
     if mol is None:
         return None
     try:
-        return Chem.MolToSmiles(mol)
+        return str(Chem.MolToSmiles(mol))
     except Exception:
         return None
 
@@ -106,7 +106,7 @@ def mol_formula(smiles: str) -> str | None:
     if mol is None:
         return None
     try:
-        return rdMolDescriptors.CalcMolFormula(mol)
+        return str(rdMolDescriptors.CalcMolFormula(mol))
     except Exception:
         return None
 
@@ -258,7 +258,7 @@ def morgan_fingerprint(smiles: str, radius: int = DEFAULT_RADIUS, nbits: int = D
             return None
         gen = _morgan_generator(radius, nbits)
         bitvect = gen.GetFingerprint(mol)
-        return DataStructs.BitVectToFPSText(bitvect)
+        return str(DataStructs.BitVectToFPSText(bitvect))
     except Exception:
         return None
 

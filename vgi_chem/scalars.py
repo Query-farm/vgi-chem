@@ -79,6 +79,8 @@ class IsValidSmilesFunction(ScalarFunction):
     """``is_valid_smiles(smiles)`` -- True if the string parses to a molecule."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "is_valid_smiles"
         description = "True if the SMILES string parses to a valid molecule (false if not, NULL if NULL)"
         categories = ["chem", "validity"]
@@ -97,6 +99,7 @@ class IsValidSmilesFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string to validate.")]
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_bool(smiles, chem.is_valid_smiles)
 
 
@@ -104,6 +107,8 @@ class CanonicalSmilesFunction(ScalarFunction):
     """``canonical_smiles(smiles)`` -- RDKit canonical SMILES, or NULL if invalid."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "canonical_smiles"
         description = "RDKit canonical SMILES form, or NULL if the input is invalid"
         categories = ["chem", "identity"]
@@ -118,6 +123,7 @@ class CanonicalSmilesFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string to canonicalize.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_str(smiles, chem.canonical_smiles)
 
 
@@ -125,6 +131,8 @@ class MolFormulaFunction(ScalarFunction):
     """``mol_formula(smiles)`` -- Hill-system molecular formula, or NULL if invalid."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "mol_formula"
         description = "Hill-system molecular formula, e.g. 'C9H8O4', or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -139,6 +147,7 @@ class MolFormulaFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_str(smiles, chem.mol_formula)
 
 
@@ -146,6 +155,8 @@ class InchiFunction(ScalarFunction):
     """``inchi(smiles)`` -- standard InChI string, or NULL if invalid."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "inchi"
         description = "Standard InChI string, or NULL if invalid"
         categories = ["chem", "identity"]
@@ -160,6 +171,7 @@ class InchiFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_str(smiles, chem.inchi_of)
 
 
@@ -167,6 +179,8 @@ class InchiKeyFunction(ScalarFunction):
     """``inchikey(smiles)`` -- standard InChIKey, or NULL if invalid."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "inchikey"
         description = "Standard InChIKey (27-char hashed InChI), or NULL if invalid"
         categories = ["chem", "identity"]
@@ -181,6 +195,7 @@ class InchiKeyFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_str(smiles, chem.inchikey_of)
 
 
@@ -193,6 +208,8 @@ class MolWeightFunction(ScalarFunction):
     """``mol_weight(smiles)`` -- average molecular weight (g/mol)."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "mol_weight"
         description = "Average molecular weight in g/mol, or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -207,6 +224,7 @@ class MolWeightFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.DoubleArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_double(smiles, chem.mol_weight)
 
 
@@ -214,6 +232,8 @@ class ExactMassFunction(ScalarFunction):
     """``exact_mass(smiles)`` -- monoisotopic (exact) mass."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "exact_mass"
         description = "Monoisotopic (exact) mass, or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -228,6 +248,7 @@ class ExactMassFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.DoubleArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_double(smiles, chem.exact_mass)
 
 
@@ -235,6 +256,8 @@ class LogPFunction(ScalarFunction):
     """``logp(smiles)`` -- Crippen MolLogP."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "logp"
         description = "Crippen MolLogP (octanol-water partition coefficient estimate), or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -249,6 +272,7 @@ class LogPFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.DoubleArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_double(smiles, chem.logp)
 
 
@@ -256,6 +280,8 @@ class TpsaFunction(ScalarFunction):
     """``tpsa(smiles)`` -- topological polar surface area."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "tpsa"
         description = "Topological polar surface area (TPSA) in Angstrom^2, or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -270,6 +296,7 @@ class TpsaFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.DoubleArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_double(smiles, chem.tpsa)
 
 
@@ -282,6 +309,8 @@ class NumAtomsFunction(ScalarFunction):
     """``num_atoms(smiles)`` -- number of heavy (non-H) atoms."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "num_atoms"
         description = "Number of heavy (non-hydrogen) atoms, or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -296,6 +325,7 @@ class NumAtomsFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.Int32Array, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_int(smiles, chem.num_atoms)
 
 
@@ -303,6 +333,8 @@ class NumRingsFunction(ScalarFunction):
     """``num_rings(smiles)`` -- ring count (SSSR)."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "num_rings"
         description = "Number of rings (SSSR ring count), or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -317,6 +349,7 @@ class NumRingsFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.Int32Array, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_int(smiles, chem.num_rings)
 
 
@@ -324,6 +357,8 @@ class NumRotatableBondsFunction(ScalarFunction):
     """``num_rotatable_bonds(smiles)`` -- rotatable bond count."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "num_rotatable_bonds"
         description = "Number of rotatable bonds, or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -338,6 +373,7 @@ class NumRotatableBondsFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.Int32Array, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_int(smiles, chem.num_rotatable_bonds)
 
 
@@ -345,6 +381,8 @@ class NumHDonorsFunction(ScalarFunction):
     """``num_h_donors(smiles)`` -- H-bond donor count."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "num_h_donors"
         description = "Number of hydrogen-bond donors (Lipinski), or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -359,6 +397,7 @@ class NumHDonorsFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.Int32Array, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_int(smiles, chem.num_h_donors)
 
 
@@ -366,6 +405,8 @@ class NumHAcceptorsFunction(ScalarFunction):
     """``num_h_acceptors(smiles)`` -- H-bond acceptor count."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "num_h_acceptors"
         description = "Number of hydrogen-bond acceptors (Lipinski), or NULL if invalid"
         categories = ["chem", "descriptors"]
@@ -380,6 +421,7 @@ class NumHAcceptorsFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.Int32Array, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_int(smiles, chem.num_h_acceptors)
 
 
@@ -392,10 +434,11 @@ class MorganFingerprintFunction(ScalarFunction):
     """``morgan_fingerprint(smiles)`` -- hex fingerprint (radius=2, nbits=2048)."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "morgan_fingerprint"
         description = (
-            "Morgan (ECFP-like) fingerprint as a hex bit-string (defaults radius=2, nbits=2048); "
-            "NULL if invalid"
+            "Morgan (ECFP-like) fingerprint as a hex bit-string (defaults radius=2, nbits=2048); NULL if invalid"
         )
         categories = ["chem", "fingerprint"]
         examples = [
@@ -409,6 +452,7 @@ class MorganFingerprintFunction(ScalarFunction):
     def compute(
         cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string.")]
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_str(smiles, chem.morgan_fingerprint)
 
 
@@ -416,6 +460,8 @@ class MorganFingerprintParamsFunction(ScalarFunction):
     """``morgan_fingerprint(smiles, radius, nbits)`` -- explicit parameters."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "morgan_fingerprint"
         description = "Morgan fingerprint as a hex bit-string with explicit radius and nbits; NULL if invalid"
         categories = ["chem", "fingerprint"]
@@ -433,6 +479,7 @@ class MorganFingerprintParamsFunction(ScalarFunction):
         radius: Annotated[int, ConstParam("Morgan radius (e.g. 2).")],
         nbits: Annotated[int, ConstParam("Fingerprint length in bits (e.g. 2048).")],
     ) -> Annotated[pa.StringArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         return _map_str(smiles, lambda s: chem.morgan_fingerprint(s, radius, nbits))
 
 
@@ -440,6 +487,8 @@ class TanimotoFunction(ScalarFunction):
     """``tanimoto(smiles_a, smiles_b)`` -- Morgan/Tanimoto similarity (radius=2)."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "tanimoto"
         description = "Morgan/Tanimoto similarity in [0,1] (radius=2); NULL if either SMILES is invalid"
         categories = ["chem", "similarity"]
@@ -456,6 +505,7 @@ class TanimotoFunction(ScalarFunction):
         smiles_a: Annotated[pa.StringArray, Param(doc="First SMILES string.")],
         smiles_b: Annotated[pa.StringArray, Param(doc="Second SMILES string.")],
     ) -> Annotated[pa.DoubleArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         a = smiles_a.to_pylist()
         b = smiles_b.to_pylist()
         out = [None if x is None or y is None else chem.tanimoto(x, y) for x, y in zip(a, b, strict=True)]
@@ -466,6 +516,8 @@ class TanimotoRadiusFunction(ScalarFunction):
     """``tanimoto(smiles_a, smiles_b, radius)`` -- explicit Morgan radius."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "tanimoto"
         description = "Morgan/Tanimoto similarity in [0,1] with an explicit radius; NULL if either is invalid"
         categories = ["chem", "similarity"]
@@ -483,11 +535,10 @@ class TanimotoRadiusFunction(ScalarFunction):
         smiles_b: Annotated[pa.StringArray, Param(doc="Second SMILES string.")],
         radius: Annotated[int, ConstParam("Morgan radius (e.g. 2).")],
     ) -> Annotated[pa.DoubleArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         a = smiles_a.to_pylist()
         b = smiles_b.to_pylist()
-        out = [
-            None if x is None or y is None else chem.tanimoto(x, y, radius) for x, y in zip(a, b, strict=True)
-        ]
+        out = [None if x is None or y is None else chem.tanimoto(x, y, radius) for x, y in zip(a, b, strict=True)]
         return pa.array(out, type=pa.float64())
 
 
@@ -500,6 +551,8 @@ class SubstructureMatchFunction(ScalarFunction):
     """``substructure_match(smiles, smarts)`` -- does the molecule contain the pattern."""
 
     class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
         name = "substructure_match"
         description = (
             "True if the molecule contains the SMARTS pattern. "
@@ -519,11 +572,11 @@ class SubstructureMatchFunction(ScalarFunction):
         smiles: Annotated[pa.StringArray, Param(doc="SMILES string of the molecule.")],
         smarts: Annotated[pa.StringArray, Param(doc="SMARTS query pattern.")],
     ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
         mols = smiles.to_pylist()
         pats = smarts.to_pylist()
         out = [
-            None if s is None or p is None else chem.substructure_match(s, p)
-            for s, p in zip(mols, pats, strict=True)
+            None if s is None or p is None else chem.substructure_match(s, p) for s, p in zip(mols, pats, strict=True)
         ]
         return pa.array(out, type=pa.bool_())
 

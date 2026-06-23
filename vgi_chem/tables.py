@@ -58,6 +58,8 @@ class LipinskiFunction(TableFunctionGenerator[_LipinskiArgs]):
     FIXED_SCHEMA: ClassVar[pa.Schema] = _LIPINSKI_SCHEMA
 
     class Meta:
+        """VGI table function metadata (name, description, categories, examples)."""
+
         name = "lipinski"
         description = "Lipinski rule-of-five breakdown (MW<=500, logP<=5, HBD<=5, HBA<=10), one row per rule"
         categories = ["chem", "druglikeness"]
@@ -74,10 +76,12 @@ class LipinskiFunction(TableFunctionGenerator[_LipinskiArgs]):
 
     @classmethod
     def cardinality(cls, params: BindParams[_LipinskiArgs]) -> TableCardinality:
+        """Report the fixed row count (one row per Lipinski rule)."""
         return TableCardinality(estimate=4, max=4)
 
     @classmethod
     def process(cls, params: ProcessParams[_LipinskiArgs], state: None, out: OutputCollector) -> None:
+        """Emit one row per Lipinski rule for the input SMILES."""
         rows = chem.lipinski(params.args.smiles) or []
         out.emit(
             pa.RecordBatch.from_pydict(

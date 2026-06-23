@@ -43,6 +43,7 @@ dev = [
     "pytest>=8",
     "ruff",
     "mypy",
+    "pydoclint",
 ]
 
 
@@ -54,16 +55,40 @@ build-backend = "hatchling.build"
 packages = ["vgi_chem"]
 
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py313"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F", "I", "UP", "B", "SIM", "D"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pydoclint]
+style = "google"
+arg_type_hints_in_docstring = false
+check_return_types = false
+check_yield_types = false
+check_class_attributes = true
+skip_checking_raises = true
+allow_init_docstring = true
 
 [tool.mypy]
 python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+# RDKit ships PEP 561 stubs (rdkit-stubs) that do not parse under current mypy,
+# so treat RDKit as an untyped dependency and do not follow into its stubs.
+module = ["rdkit", "rdkit.*"]
 ignore_missing_imports = true
-# The rdkit wheel ships PEP 561 stubs that don't parse under current mypy, so we
-# run with --no-site-packages (see Makefile / CI) to skip third-party stubs and
-# treat rdkit as untyped. We already guard every RDKit call, so this is safe.
-no_site_packages = true
+follow_imports = "skip"
+follow_imports_for_stubs = true
