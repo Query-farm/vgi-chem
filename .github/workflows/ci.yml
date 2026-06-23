@@ -58,8 +58,12 @@ jobs:
       - name: Type check (mypy)
         run: uv run mypy vgi_chem/ chem_worker.py
 
+      # Run pydoclint in an isolated tool environment: the project depends on
+      # `docstring-parser` (via vgi-rpc) while pydoclint needs the conflicting
+      # `docstring-parser-fork`, and both ship the same top-level module. uvx
+      # gives pydoclint its own env so the two never clobber each other.
       - name: Docstring lint (pydoclint)
-        run: uv run pydoclint vgi_chem/ chem_worker.py
+        run: uvx pydoclint --config pyproject.toml vgi_chem/ chem_worker.py
 
   # Resolve the latest published haybarn release once, so the whole matrix tests
   # the same version (and we never hardcode/pin it).
