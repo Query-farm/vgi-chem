@@ -4,7 +4,9 @@
 
 <p align="center"><em>A <a href="https://query.farm">Query.Farm</a> VGI worker for DuckDB.</em></p>
 
-# vgi-chem
+# Cheminformatics — Descriptors, Fingerprints & Substructure Search in DuckDB
+
+> **vgi-chem** · a [Query.Farm](https://query.farm) VGI worker · powered by RDKit
 
 [![CI](https://github.com/Query-farm/vgi-chem/actions/workflows/ci.yml/badge.svg)](https://github.com/Query-farm/vgi-chem/actions/workflows/ci.yml)
 
