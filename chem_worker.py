@@ -47,6 +47,12 @@ _CHEM_CATALOG = Catalog(
     default_schema="main",
     comment="RDKit cheminformatics for SQL: molecular descriptors, fingerprints, substructure, InChI.",
     tags={
+        "vgi.title": "Cheminformatics for SQL (RDKit)",
+        "vgi.keywords": (
+            "cheminformatics, chemistry, rdkit, smiles, smarts, molecule, descriptor, "
+            "molecular weight, logp, tpsa, fingerprint, morgan, ecfp, tanimoto, similarity, "
+            "substructure, inchi, inchikey, lipinski, druglikeness"
+        ),
         "vgi.description_llm": (
             "Cheminformatics over SMILES strings, computed with RDKit. Validate and canonicalize "
             "SMILES; compute molecular descriptors (molecular weight, exact mass, Crippen logP, "
@@ -80,6 +86,28 @@ _CHEM_CATALOG = Catalog(
             name="main",
             comment="RDKit cheminformatics for SQL: descriptors, fingerprints, substructure, InChI.",
             tags={
+                "vgi.title": "Chem — main",
+                "vgi.keywords": (
+                    "cheminformatics, chemistry, smiles, smarts, molecule, descriptor, "
+                    "mol_weight, exact_mass, logp, tpsa, fingerprint, morgan, tanimoto, "
+                    "substructure, inchi, inchikey, lipinski, druglikeness"
+                ),
+                "vgi.source_url": ("https://github.com/Query-farm/vgi-chem/blob/main/chem_worker.py"),
+                # VGI123 classifying tags use BARE keys (not vgi.-namespaced).
+                "domain": "cheminformatics",
+                "category": "molecular-analysis",
+                "topic": "descriptors-fingerprints-substructure",
+                # VGI506: representative, catalog-qualified example queries for the schema.
+                "vgi.example_queries": (
+                    "SELECT chem.main.is_valid_smiles('CCO');\n"
+                    "SELECT chem.main.canonical_smiles('OCC');\n"
+                    "SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
+                    "SELECT ROUND(chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2);\n"
+                    "SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
+                    "SELECT chem.main.tanimoto('CCO', 'CCO');\n"
+                    "SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1');\n"
+                    "SELECT * FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');"
+                ),
                 "vgi.description_llm": (
                     "Cheminformatics functions over SMILES strings: validate/canonicalize SMILES, "
                     "compute molecular descriptors (weight, exact mass, logP, TPSA, atom/ring/bond "

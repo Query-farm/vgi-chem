@@ -27,6 +27,7 @@ from vgi.table_function import (
 from vgi_rpc.rpc import OutputCollector
 
 from . import chem
+from .meta import object_tags
 from .schema_utils import field
 
 
@@ -64,6 +65,42 @@ class LipinskiFunction(TableFunctionGenerator[_LipinskiArgs]):
         description = "Lipinski rule-of-five breakdown (MW<=500, logP<=5, HBD<=5, HBA<=10), one row per rule"
         categories = ["chem", "druglikeness"]
         tags = {
+            **object_tags(
+                title="Lipinski Rule-of-Five Breakdown",
+                description_llm=(
+                    "## lipinski\n\n"
+                    "A **set-returning** table function that breaks a molecule (given as SMILES) "
+                    "down against the **Lipinski rule of five**, emitting one row per rule with "
+                    "its computed value and whether the threshold is satisfied.\n\n"
+                    "**Use it** for drug-likeness screening: keep compounds that pass all four "
+                    "rules, or inspect exactly which rule a compound violates.\n\n"
+                    "Rules evaluated: molecular weight <= 500, logP <= 5, H-bond donors <= 5, "
+                    "H-bond acceptors <= 10.\n\n"
+                    "- **Input**: one SMILES string (`VARCHAR`) as a positional table argument.\n"
+                    "- **Output**: rows of `(rule VARCHAR, value DOUBLE, passes BOOLEAN)`.\n\n"
+                    "**Edge cases**: an invalid SMILES yields **no rows** (rather than raising), so "
+                    "`bool_and(passes)` over an empty result behaves accordingly. Aggregate with "
+                    "`bool_and(passes)` to get a single drug-like flag."
+                ),
+                description_md=(
+                    "# lipinski\n\n"
+                    "Lipinski rule-of-five breakdown for a SMILES string, one row per rule.\n\n"
+                    "## Usage\n\n"
+                    "```sql\n"
+                    "SELECT * FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
+                    "SELECT bool_and(passes) AS drug_like\n"
+                    "FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
+                    "```\n\n"
+                    "## Notes\n\n"
+                    "Rules: MW <= 500, logP <= 5, HBD <= 5, HBA <= 10. An invalid SMILES returns "
+                    "no rows."
+                ),
+                keywords=(
+                    "lipinski, rule of five, ro5, druglikeness, drug-like, screening, "
+                    "molecular weight, logp, hbd, hba, filter"
+                ),
+                relative_path="vgi_chem/tables.py",
+            ),
             "vgi.columns_md": (
                 "| column | type | description |\n"
                 "|---|---|---|\n"
