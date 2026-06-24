@@ -101,7 +101,7 @@ class LipinskiFunction(TableFunctionGenerator[_LipinskiArgs]):
                 ),
                 relative_path="vgi_chem/tables.py",
             ),
-            "vgi.columns_md": (
+            "vgi.result_columns_md": (
                 "| column | type | description |\n"
                 "|---|---|---|\n"
                 "| `rule` | VARCHAR | Lipinski rule name (`molecular_weight`, `logp`, "

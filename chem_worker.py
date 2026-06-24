@@ -53,7 +53,7 @@ _CHEM_CATALOG = Catalog(
             "molecular weight, logp, tpsa, fingerprint, morgan, ecfp, tanimoto, similarity, "
             "substructure, inchi, inchikey, lipinski, druglikeness"
         ),
-        "vgi.description_llm": (
+        "vgi.doc_llm": (
             "Cheminformatics over SMILES strings, computed with RDKit. Validate and canonicalize "
             "SMILES; compute molecular descriptors (molecular weight, exact mass, Crippen logP, "
             "TPSA, heavy-atom/ring/rotatable-bond/H-bond-donor/acceptor counts); derive molecular "
@@ -62,7 +62,7 @@ _CHEM_CATALOG = Catalog(
             "break a molecule down against the Lipinski rule of five. Use for molecular property "
             "calculation, similarity search, substructure filtering and drug-likeness screening in SQL."
         ),
-        "vgi.description_md": (
+        "vgi.doc_md": (
             "# chem\n\n"
             "Cheminformatics for DuckDB, computed from SMILES strings with "
             "[RDKit](https://www.rdkit.org/).\n\n"
@@ -108,16 +108,34 @@ _CHEM_CATALOG = Catalog(
                     "SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1');\n"
                     "SELECT * FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');"
                 ),
-                "vgi.description_llm": (
+                "vgi.doc_llm": (
                     "Cheminformatics functions over SMILES strings: validate/canonicalize SMILES, "
                     "compute molecular descriptors (weight, exact mass, logP, TPSA, atom/ring/bond "
                     "counts), derive formula/InChI/InChIKey identifiers, build Morgan fingerprints "
                     "and Tanimoto similarity, run SMARTS substructure matches, and evaluate the "
                     "Lipinski rule of five."
                 ),
-                "vgi.description_md": (
-                    "Cheminformatics functions over SMILES strings: descriptors, fingerprints, "
-                    "similarity, substructure search, InChI/InChIKey, and Lipinski rule-of-five."
+                "vgi.doc_md": (
+                    "# chem.main\n\n"
+                    "The single schema of the `chem` catalog. It groups every cheminformatics "
+                    "function exposed by this worker, all computed from SMILES strings via "
+                    "RDKit.\n\n"
+                    "## Contents\n\n"
+                    "- **Validity & identity**: `is_valid_smiles`, `canonical_smiles`, "
+                    "`mol_formula`, `inchi`, `inchikey`.\n"
+                    "- **Numeric descriptors**: `mol_weight`, `exact_mass`, `logp`, `tpsa`.\n"
+                    "- **Count descriptors**: `num_atoms`, `num_rings`, `num_rotatable_bonds`, "
+                    "`num_h_donors`, `num_h_acceptors`.\n"
+                    "- **Fingerprints & similarity**: `morgan_fingerprint`, `tanimoto`.\n"
+                    "- **Substructure**: `substructure_match` (SMARTS).\n"
+                    "- **Drug-likeness**: `lipinski(smiles)` table function.\n\n"
+                    "## Usage\n\n"
+                    "Reference functions as `chem.main.<fn>(...)` (or `chem.<fn>` since `main` is "
+                    "the default schema). Scalars take positional arguments; `lipinski` is a "
+                    "set-returning table function.\n\n"
+                    "## Notes\n\n"
+                    "Every function is total: `NULL` in yields `NULL` out, and invalid (non-NULL) "
+                    "SMILES yields `NULL`/`false`/no-rows rather than raising."
                 ),
             },
             functions=list(_FUNCTIONS),
