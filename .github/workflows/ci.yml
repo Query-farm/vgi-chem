@@ -65,6 +65,30 @@ jobs:
       - name: Docstring lint (pydoclint)
         run: uvx pydoclint --config pyproject.toml vgi_chem/ chem_worker.py
 
+  # Metadata-quality gate: build the worker, then run the vgi-lint catalog
+  # linter against the launched worker. Kept as a separate job so the
+  # catalog-quality score is visible independently of the test/lint jobs.
+  metadata-quality:
+    name: Metadata quality (vgi-lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+
+      - name: Set up Python 3.13
+        run: uv python install 3.13
+
+      - name: Install the worker (with the http extra)
+        run: uv sync --python 3.13 --extra http
+
+      - name: vgi-lint
+        uses: Query-farm/vgi-lint-check@v1
+        with:
+          location: "uv run chem_worker.py"
+          fail-on: info
+
   # Resolve the latest published haybarn release once, so the whole matrix tests
   # the same version (and we never hardcode/pin it).
   resolve-haybarn:

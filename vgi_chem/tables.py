@@ -63,6 +63,16 @@ class LipinskiFunction(TableFunctionGenerator[_LipinskiArgs]):
         name = "lipinski"
         description = "Lipinski rule-of-five breakdown (MW<=500, logP<=5, HBD<=5, HBA<=10), one row per rule"
         categories = ["chem", "druglikeness"]
+        tags = {
+            "vgi.columns_md": (
+                "| column | type | description |\n"
+                "|---|---|---|\n"
+                "| `rule` | VARCHAR | Lipinski rule name (`molecular_weight`, `logp`, "
+                "`h_bond_donors`, `h_bond_acceptors`). |\n"
+                "| `value` | DOUBLE | Computed descriptor value for the rule. |\n"
+                "| `passes` | BOOLEAN | True if this rule's rule-of-five threshold is satisfied. |"
+            ),
+        }
         examples = [
             FunctionExample(
                 sql="SELECT * FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O')",
