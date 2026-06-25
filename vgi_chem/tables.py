@@ -95,10 +95,19 @@ class LipinskiFunction(TableFunctionGenerator[_LipinskiArgs]):
                     "Rules: MW <= 500, logP <= 5, HBD <= 5, HBA <= 10. An invalid SMILES returns "
                     "no rows."
                 ),
-                keywords=(
-                    "lipinski, rule of five, ro5, druglikeness, drug-like, screening, "
-                    "molecular weight, logp, hbd, hba, filter"
-                ),
+                keywords=[
+                    "lipinski",
+                    "rule of five",
+                    "ro5",
+                    "druglikeness",
+                    "drug-like",
+                    "screening",
+                    "molecular weight",
+                    "logp",
+                    "hbd",
+                    "hba",
+                    "filter",
+                ],
                 relative_path="vgi_chem/tables.py",
             ),
             "vgi.result_columns_md": (

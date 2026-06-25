@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "vgi-python[http]>=0.8.4",
+#     "vgi-python[http]>=0.8.5",
 #     "rdkit>=2024.3",
 #     "pyarrow",
 # ]
@@ -34,6 +34,7 @@ from __future__ import annotations
 from vgi import Worker
 from vgi.catalog import Catalog, Schema
 
+from vgi_chem.meta import keywords_json
 from vgi_chem.scalars import SCALAR_FUNCTIONS
 from vgi_chem.tables import TABLE_FUNCTIONS
 
@@ -48,10 +49,29 @@ _CHEM_CATALOG = Catalog(
     comment="RDKit cheminformatics for SQL: molecular descriptors, fingerprints, substructure, InChI.",
     tags={
         "vgi.title": "Cheminformatics for SQL (RDKit)",
-        "vgi.keywords": (
-            "cheminformatics, chemistry, rdkit, smiles, smarts, molecule, descriptor, "
-            "molecular weight, logp, tpsa, fingerprint, morgan, ecfp, tanimoto, similarity, "
-            "substructure, inchi, inchikey, lipinski, druglikeness"
+        "vgi.keywords": keywords_json(
+            [
+                "cheminformatics",
+                "chemistry",
+                "rdkit",
+                "smiles",
+                "smarts",
+                "molecule",
+                "descriptor",
+                "molecular weight",
+                "logp",
+                "tpsa",
+                "fingerprint",
+                "morgan",
+                "ecfp",
+                "tanimoto",
+                "similarity",
+                "substructure",
+                "inchi",
+                "inchikey",
+                "lipinski",
+                "druglikeness",
+            ]
         ),
         "vgi.doc_llm": (
             "Cheminformatics over SMILES strings, computed with RDKit. Validate and canonicalize "
@@ -87,12 +107,28 @@ _CHEM_CATALOG = Catalog(
             comment="RDKit cheminformatics for SQL: descriptors, fingerprints, substructure, InChI.",
             tags={
                 "vgi.title": "Chem — main",
-                "vgi.keywords": (
-                    "cheminformatics, chemistry, smiles, smarts, molecule, descriptor, "
-                    "mol_weight, exact_mass, logp, tpsa, fingerprint, morgan, tanimoto, "
-                    "substructure, inchi, inchikey, lipinski, druglikeness"
+                "vgi.keywords": keywords_json(
+                    [
+                        "cheminformatics",
+                        "chemistry",
+                        "smiles",
+                        "smarts",
+                        "molecule",
+                        "descriptor",
+                        "mol_weight",
+                        "exact_mass",
+                        "logp",
+                        "tpsa",
+                        "fingerprint",
+                        "morgan",
+                        "tanimoto",
+                        "substructure",
+                        "inchi",
+                        "inchikey",
+                        "lipinski",
+                        "druglikeness",
+                    ]
                 ),
-                "vgi.source_url": ("https://github.com/Query-farm/vgi-chem/blob/main/chem_worker.py"),
                 # VGI123 classifying tags use BARE keys (not vgi.-namespaced).
                 "domain": "cheminformatics",
                 "category": "molecular-analysis",

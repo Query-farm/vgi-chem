@@ -115,7 +115,7 @@ class IsValidSmilesFunction(ScalarFunction):
                 "`NULL` in yields `NULL` out; any other unparseable input yields `false`, so this "
                 "is the safe predicate to gate the other descriptor/identity functions."
             ),
-            keywords="smiles, valid, validate, validity, parse, check molecule, is valid, sanitize",
+            keywords=["smiles", "valid", "validate", "validity", "parse", "check molecule", "is valid", "sanitize"],
             relative_path=_SRC,
         )
         examples = [
@@ -172,7 +172,7 @@ class CanonicalSmilesFunction(ScalarFunction):
                 "Returns `NULL` on invalid input. Two strings denoting the same molecule "
                 "canonicalize to the same value, making this a reliable grouping/join key."
             ),
-            keywords="smiles, canonical, canonicalize, normalize, dedupe, deduplicate, identity, rdkit",
+            keywords=["smiles", "canonical", "canonicalize", "normalize", "dedupe", "deduplicate", "identity", "rdkit"],
             relative_path=_SRC,
         )
         examples = [
@@ -223,7 +223,7 @@ class MolFormulaFunction(ScalarFunction):
                 "## Notes\n\n"
                 "Implicit hydrogens are included. Returns `NULL` on invalid input."
             ),
-            keywords="formula, molecular formula, hill, composition, elements, C9H8O4, empirical formula",
+            keywords=["formula", "molecular formula", "hill", "composition", "elements", "C9H8O4", "empirical formula"],
             relative_path=_SRC,
         )
         examples = [
@@ -275,7 +275,7 @@ class InchiFunction(ScalarFunction):
                 "Standard InChI applies the IUPAC normalization layers. Pair with `inchikey` for a "
                 "compact hashed key. Returns `NULL` on invalid input."
             ),
-            keywords="inchi, identifier, iupac, structure key, standard inchi, cross-reference, lookup",
+            keywords=["inchi", "identifier", "iupac", "structure key", "standard inchi", "cross-reference", "lookup"],
             relative_path=_SRC,
         )
         examples = [
@@ -329,7 +329,16 @@ class InchiKeyFunction(ScalarFunction):
                 "A fixed-length, indexable structure key. The first 14 characters capture skeletal "
                 "connectivity. Returns `NULL` on invalid input."
             ),
-            keywords="inchikey, inchi key, hash, structure key, primary key, identifier, lookup, search",
+            keywords=[
+                "inchikey",
+                "inchi key",
+                "hash",
+                "structure key",
+                "primary key",
+                "identifier",
+                "lookup",
+                "search",
+            ],
             relative_path=_SRC,
         )
         examples = [
@@ -387,7 +396,7 @@ class MolWeightFunction(ScalarFunction):
                 "Isotope-averaged weight; see `exact_mass` for the monoisotopic mass. Returns "
                 "`NULL` on invalid input."
             ),
-            keywords="molecular weight, mw, mass, g/mol, average mass, lipinski, descriptor",
+            keywords=["molecular weight", "mw", "mass", "g/mol", "average mass", "lipinski", "descriptor"],
             relative_path=_SRC,
         )
         examples = [
@@ -438,7 +447,7 @@ class ExactMassFunction(ScalarFunction):
                 "Uses the most-abundant isotope per element; contrast with `mol_weight` (average). "
                 "Returns `NULL` on invalid input."
             ),
-            keywords="exact mass, monoisotopic, mass spec, da, dalton, m/z, descriptor, isotope",
+            keywords=["exact mass", "monoisotopic", "mass spec", "da", "dalton", "m/z", "descriptor", "isotope"],
             relative_path=_SRC,
         )
         examples = [
@@ -491,7 +500,16 @@ class LogPFunction(ScalarFunction):
                 "An estimate from Crippen atom contributions, not an experimental measurement. "
                 "Higher means more lipophilic. Returns `NULL` on invalid input."
             ),
-            keywords="logp, crippen, lipophilicity, partition coefficient, octanol water, adme, lipinski, druglikeness",
+            keywords=[
+                "logp",
+                "crippen",
+                "lipophilicity",
+                "partition coefficient",
+                "octanol water",
+                "adme",
+                "lipinski",
+                "druglikeness",
+            ],
             relative_path=_SRC,
         )
         examples = [
@@ -544,7 +562,16 @@ class TpsaFunction(ScalarFunction):
                 "A 2D topological estimate (Ertl). Lower TPSA generally predicts better "
                 "permeability. Returns `NULL` on invalid input."
             ),
-            keywords="tpsa, polar surface area, permeability, absorption, adme, ertl, descriptor, druglikeness",
+            keywords=[
+                "tpsa",
+                "polar surface area",
+                "permeability",
+                "absorption",
+                "adme",
+                "ertl",
+                "descriptor",
+                "druglikeness",
+            ],
             relative_path=_SRC,
         )
         examples = [
@@ -599,7 +626,15 @@ class NumAtomsFunction(ScalarFunction):
                 "Hydrogens are excluded. A handy molecular-size filter. Returns `NULL` on invalid "
                 "input."
             ),
-            keywords="heavy atom count, num atoms, atom count, size, fragment, ligand efficiency, descriptor",
+            keywords=[
+                "heavy atom count",
+                "num atoms",
+                "atom count",
+                "size",
+                "fragment",
+                "ligand efficiency",
+                "descriptor",
+            ],
             relative_path=_SRC,
         )
         examples = [
@@ -650,7 +685,7 @@ class NumRingsFunction(ScalarFunction):
                 "## Notes\n\n"
                 "Uses the SSSR convention. Returns `NULL` on invalid input."
             ),
-            keywords="ring count, num rings, sssr, cycles, aromatic, polycyclic, rigidity, descriptor",
+            keywords=["ring count", "num rings", "sssr", "cycles", "aromatic", "polycyclic", "rigidity", "descriptor"],
             relative_path=_SRC,
         )
         examples = [
@@ -700,7 +735,15 @@ class NumRotatableBondsFunction(ScalarFunction):
                 "## Notes\n\n"
                 "A flexibility metric (Veber's rule). Returns `NULL` on invalid input."
             ),
-            keywords="rotatable bonds, flexibility, veber, bioavailability, conformers, descriptor, druglikeness",
+            keywords=[
+                "rotatable bonds",
+                "flexibility",
+                "veber",
+                "bioavailability",
+                "conformers",
+                "descriptor",
+                "druglikeness",
+            ],
             relative_path=_SRC,
         )
         examples = [
@@ -750,7 +793,7 @@ class NumHDonorsFunction(ScalarFunction):
                 "## Notes\n\n"
                 "Lipinski rule HBD <= 5. Returns `NULL` on invalid input."
             ),
-            keywords="hydrogen bond donors, hbd, h donors, lipinski, nhoh, druglikeness, descriptor",
+            keywords=["hydrogen bond donors", "hbd", "h donors", "lipinski", "nhoh", "druglikeness", "descriptor"],
             relative_path=_SRC,
         )
         examples = [
@@ -799,7 +842,7 @@ class NumHAcceptorsFunction(ScalarFunction):
                 "## Notes\n\n"
                 "Lipinski rule HBA <= 10. Returns `NULL` on invalid input."
             ),
-            keywords="hydrogen bond acceptors, hba, h acceptors, lipinski, druglikeness, descriptor",
+            keywords=["hydrogen bond acceptors", "hba", "h acceptors", "lipinski", "druglikeness", "descriptor"],
             relative_path=_SRC,
         )
         examples = [
@@ -865,10 +908,17 @@ class MorganFingerprintFunction(ScalarFunction):
                     "Compare two fingerprints with `tanimoto`. Only fingerprints built with the "
                     "same `radius`/`nbits` are comparable. Returns `NULL` on invalid input."
                 ),
-                keywords=(
-                    "morgan fingerprint, ecfp, fingerprint, circular fingerprint, bit vector, "
-                    "similarity, features, embedding, descriptor"
-                ),
+                keywords=[
+                    "morgan fingerprint",
+                    "ecfp",
+                    "fingerprint",
+                    "circular fingerprint",
+                    "bit vector",
+                    "similarity",
+                    "features",
+                    "embedding",
+                    "descriptor",
+                ],
                 relative_path=_SRC,
             ),
             # VGI509: guaranteed-runnable, catalog-qualified examples (no backend needed).
@@ -935,10 +985,17 @@ class MorganFingerprintParamsFunction(ScalarFunction):
                 "Compare with `tanimoto`; keep `radius`/`nbits` consistent across the set. Returns "
                 "`NULL` on invalid input."
             ),
-            keywords=(
-                "morgan fingerprint, ecfp, fingerprint, circular fingerprint, bit vector, radius, "
-                "nbits, similarity, features"
-            ),
+            keywords=[
+                "morgan fingerprint",
+                "ecfp",
+                "fingerprint",
+                "circular fingerprint",
+                "bit vector",
+                "radius",
+                "nbits",
+                "similarity",
+                "features",
+            ],
             relative_path=_SRC,
         )
         examples = [
@@ -997,10 +1054,16 @@ class TanimotoFunction(ScalarFunction):
                 "## Notes\n\n"
                 "Range [0, 1]; 1.0 is identical. Returns `NULL` if either input is invalid."
             ),
-            keywords=(
-                "tanimoto, similarity, jaccard, fingerprint similarity, morgan, nearest neighbor, "
-                "clustering, similarity search"
-            ),
+            keywords=[
+                "tanimoto",
+                "similarity",
+                "jaccard",
+                "fingerprint similarity",
+                "morgan",
+                "nearest neighbor",
+                "clustering",
+                "similarity search",
+            ],
             relative_path=_SRC,
         )
         examples = [
@@ -1056,10 +1119,16 @@ class TanimotoRadiusFunction(ScalarFunction):
                 "## Notes\n\n"
                 "Range [0, 1]. Returns `NULL` if either input is invalid."
             ),
-            keywords=(
-                "tanimoto, similarity, jaccard, fingerprint similarity, morgan, radius, "
-                "nearest neighbor, similarity search"
-            ),
+            keywords=[
+                "tanimoto",
+                "similarity",
+                "jaccard",
+                "fingerprint similarity",
+                "morgan",
+                "radius",
+                "nearest neighbor",
+                "similarity search",
+            ],
             relative_path=_SRC,
         )
         examples = [
@@ -1126,9 +1195,16 @@ class SubstructureMatchFunction(ScalarFunction):
                 "## Notes\n\n"
                 "Returns `NULL` when the SMILES or the SMARTS is invalid; otherwise `true`/`false`."
             ),
-            keywords=(
-                "substructure, smarts, pattern match, scaffold, functional group, contains, filter, substructure search"
-            ),
+            keywords=[
+                "substructure",
+                "smarts",
+                "pattern match",
+                "scaffold",
+                "functional group",
+                "contains",
+                "filter",
+                "substructure search",
+            ],
             relative_path=_SRC,
         )
         examples = [
