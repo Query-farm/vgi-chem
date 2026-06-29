@@ -84,6 +84,7 @@ _CHEM_CATALOG = Catalog(
         ),
         "vgi.doc_md": (
             "# Cheminformatics in SQL with RDKit\n\n"
+            "![RDKit logo](https://www.rdkit.org/Images/logo.png)\n\n"
             "**Run molecular descriptors, fingerprints, Tanimoto similarity, SMARTS "
             "substructure search and InChI/InChIKey generation directly in DuckDB SQL — "
             "computed from SMILES strings by [RDKit](https://www.rdkit.org/), the "
