@@ -37,12 +37,17 @@ def object_tags(
     description_md: str,
     keywords: Sequence[str],
     relative_path: str,
+    category: str,
 ) -> dict[str, str]:
     """Build the standard per-object discovery/description tags.
 
     ``relative_path`` is accepted for call-site documentation of where the
     object is implemented, but is intentionally not emitted as a per-object
     ``vgi.source_url`` (VGI139 keeps the source link on the catalog only).
+
+    ``category`` is the object's primary ``vgi.category`` -- it must name one of
+    the ``vgi.categories`` registry entries declared on the owning schema
+    (VGI409/VGI411).
     """
     del relative_path  # documented at the call site; not emitted per-object (VGI139)
     return {
@@ -50,4 +55,5 @@ def object_tags(
         "vgi.doc_llm": description_llm,
         "vgi.doc_md": description_md,
         "vgi.keywords": keywords_json(keywords),
+        "vgi.category": category,
     }

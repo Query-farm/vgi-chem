@@ -31,6 +31,8 @@ Usage:
 
 from __future__ import annotations
 
+import json
+
 from vgi import Worker
 from vgi.catalog import Catalog, Schema
 
@@ -109,20 +111,14 @@ _CHEM_CATALOG = Catalog(
             "deterministic and reproducible across runs. See the official "
             "[RDKit documentation](https://www.rdkit.org/docs/) for the underlying algorithms.\n\n"
             "## What you can compute\n\n"
-            "- **Validity & identity**: `is_valid_smiles`, `canonical_smiles`, `mol_formula`, "
-            "`inchi`, `inchikey` — verify structures and derive canonical, hashable "
-            "identifiers for deduplication and joins.\n"
-            "- **Numeric descriptors**: `mol_weight`, `exact_mass`, `logp` (Crippen), `tpsa` "
-            "(topological polar surface area) — the physicochemical properties used in "
-            "property filtering and QSAR.\n"
-            "- **Count descriptors**: `num_atoms`, `num_rings`, `num_rotatable_bonds`, "
-            "`num_h_donors`, `num_h_acceptors`.\n"
-            "- **Fingerprints & similarity**: `morgan_fingerprint` (ECFP-style circular "
-            "fingerprints) and `tanimoto` for similarity search and clustering.\n"
-            "- **Substructure search**: `substructure_match` matches a SMARTS query pattern "
-            "against a molecule for structural filtering.\n"
-            "- **Drug-likeness**: the `lipinski(smiles)` table function returns a "
-            "rule-of-five breakdown, one row per criterion.\n\n"
+            "The catalog spans the everyday cheminformatics workflow, grouped into navigation "
+            "sections: structure **validity**, canonical **identity** (canonical SMILES plus "
+            "InChI/InChIKey for deduplication and joins), numeric and count **descriptors** for "
+            "property filtering and QSAR, circular **fingerprints** and Tanimoto **similarity** "
+            "for search and clustering, SMARTS **substructure** matching for structural filters, "
+            "and Lipinski **drug-likeness** screening. Everything operates on SMILES strings and "
+            "runs inline over whole tables. List the schema to discover the individual functions "
+            "and their signatures.\n\n"
             "## Example\n\n"
             "```sql\n"
             "INSTALL vgi FROM community; LOAD vgi;\n"
@@ -141,6 +137,56 @@ _CHEM_CATALOG = Catalog(
         "vgi.license": "MIT",
         "vgi.support_contact": "https://github.com/Query-farm/vgi-chem/issues",
         "vgi.support_policy_url": "https://github.com/Query-farm/vgi-chem/blob/main/README.md",
+        # VGI152/VGI920: analyst-suitability suite. Each task's `prompt` is the only
+        # field shown to the analyst; `reference_sql` is a deterministic grader-only
+        # canonical solution. `ignore_column_names` relaxes the result-column labels
+        # (analysts alias freely). All references are backend-deterministic RDKit calls.
+        "vgi.agent_test_tasks": json.dumps(
+            [
+                {
+                    "name": "molecular_formula",
+                    "prompt": ("The SMILES for aspirin is CC(=O)OC1=CC=CC=C1C(=O)O. What is its molecular formula?"),
+                    "reference_sql": "SELECT chem.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                    "ignore_column_names": True,
+                },
+                {
+                    "name": "validate_smiles",
+                    "prompt": "Is the string 'xyz' a valid SMILES molecule? Return a boolean.",
+                    "reference_sql": "SELECT chem.is_valid_smiles('xyz')",
+                    "ignore_column_names": True,
+                },
+                {
+                    "name": "molecular_weight",
+                    "prompt": (
+                        "Compute the molecular weight of aspirin (SMILES "
+                        "CC(=O)OC1=CC=CC=C1C(=O)O), rounded to two decimal places."
+                    ),
+                    "reference_sql": "SELECT ROUND(chem.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2)",
+                    "ignore_column_names": True,
+                },
+                {
+                    "name": "tanimoto_self_similarity",
+                    "prompt": "What is the Tanimoto similarity between ethanol (SMILES CCO) and itself?",
+                    "reference_sql": "SELECT chem.tanimoto('CCO', 'CCO')",
+                    "ignore_column_names": True,
+                },
+                {
+                    "name": "inchikey",
+                    "prompt": ("Give the InChIKey identifier for aspirin, whose SMILES is CC(=O)OC1=CC=CC=C1C(=O)O."),
+                    "reference_sql": "SELECT chem.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                    "ignore_column_names": True,
+                },
+                {
+                    "name": "substructure_search",
+                    "prompt": (
+                        "Does phenol (SMILES c1ccccc1O) contain a benzene ring, "
+                        "expressed as the SMARTS pattern c1ccccc1? Return a boolean."
+                    ),
+                    "reference_sql": "SELECT chem.substructure_match('c1ccccc1O', 'c1ccccc1')",
+                    "ignore_column_names": True,
+                },
+            ]
+        ),
     },
     source_url="https://github.com/Query-farm/vgi-chem",
     schemas=[
@@ -173,8 +219,53 @@ _CHEM_CATALOG = Catalog(
                 ),
                 # VGI123 classifying tags use BARE keys (not vgi.-namespaced).
                 "domain": "cheminformatics",
-                "category": "molecular-analysis",
                 "topic": "descriptors-fingerprints-substructure",
+                # VGI413: ordered navigation registry; array order is display order.
+                # Each function carries a matching `vgi.category` (VGI409/VGI411).
+                "vgi.categories": json.dumps(
+                    [
+                        {
+                            "name": "validity",
+                            "title": "Validity",
+                            "description": "Check whether a SMILES string parses to a real molecule.",
+                        },
+                        {
+                            "name": "identity",
+                            "title": "Identity & canonicalization",
+                            "description": (
+                                "Canonical SMILES and InChI/InChIKey identifiers for deduplication and stable joins."
+                            ),
+                        },
+                        {
+                            "name": "descriptors",
+                            "title": "Molecular descriptors",
+                            "description": (
+                                "Physicochemical properties and structural counts "
+                                "(weight, mass, logP, TPSA, atom/ring/bond counts, formula)."
+                            ),
+                        },
+                        {
+                            "name": "fingerprint",
+                            "title": "Fingerprints",
+                            "description": "Morgan (ECFP-style) circular fingerprints for vectorizing molecules.",
+                        },
+                        {
+                            "name": "similarity",
+                            "title": "Similarity",
+                            "description": "Tanimoto similarity scoring between molecules for search and clustering.",
+                        },
+                        {
+                            "name": "substructure",
+                            "title": "Substructure search",
+                            "description": "SMARTS pattern matching for structural filtering.",
+                        },
+                        {
+                            "name": "druglikeness",
+                            "title": "Drug-likeness",
+                            "description": "Lipinski rule-of-five screening for drug-likeness.",
+                        },
+                    ]
+                ),
                 # VGI506: representative, catalog-qualified example queries for the schema.
                 "vgi.example_queries": (
                     "SELECT chem.main.is_valid_smiles('CCO');\n"
@@ -199,17 +290,13 @@ _CHEM_CATALOG = Catalog(
                     "function exposed by this worker, all computed from SMILES strings via "
                     "RDKit.\n\n"
                     "## Contents\n\n"
-                    "- **Validity & identity**: `is_valid_smiles`, `canonical_smiles`, "
-                    "`mol_formula`, `inchi`, `inchikey`.\n"
-                    "- **Numeric descriptors**: `mol_weight`, `exact_mass`, `logp`, `tpsa`.\n"
-                    "- **Count descriptors**: `num_atoms`, `num_rings`, `num_rotatable_bonds`, "
-                    "`num_h_donors`, `num_h_acceptors`.\n"
-                    "- **Fingerprints & similarity**: `morgan_fingerprint`, `tanimoto`.\n"
-                    "- **Substructure**: `substructure_match` (SMARTS).\n"
-                    "- **Drug-likeness**: `lipinski(smiles)` table function.\n\n"
+                    "Functions are organized into navigation categories: validity, identity and "
+                    "canonicalization, molecular descriptors, fingerprints, similarity, "
+                    "substructure search, and drug-likeness. List the schema to enumerate the "
+                    "functions in each category, including their signatures and column docs.\n\n"
                     "## Usage\n\n"
-                    "Reference functions as `chem.main.<fn>(...)` (or `chem.<fn>` since `main` is "
-                    "the default schema). Scalars take positional arguments; `lipinski` is a "
+                    "Call a function by its qualified name, `chem.main.<fn>` — or `chem.<fn>`, since "
+                    "`main` is the default schema. Scalars take positional arguments; `lipinski` is a "
                     "set-returning table function.\n\n"
                     "## Notes\n\n"
                     "Every function is total: `NULL` in yields `NULL` out, and invalid (non-NULL) "

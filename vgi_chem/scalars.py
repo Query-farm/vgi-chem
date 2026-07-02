@@ -117,6 +117,7 @@ class IsValidSmilesFunction(ScalarFunction):
             ),
             keywords=["smiles", "valid", "validate", "validity", "parse", "check molecule", "is valid", "sanitize"],
             relative_path=_SRC,
+            category="validity",
         )
         examples = [
             FunctionExample(
@@ -174,6 +175,7 @@ class CanonicalSmilesFunction(ScalarFunction):
             ),
             keywords=["smiles", "canonical", "canonicalize", "normalize", "dedupe", "deduplicate", "identity", "rdkit"],
             relative_path=_SRC,
+            category="identity",
         )
         examples = [
             FunctionExample(
@@ -225,6 +227,7 @@ class MolFormulaFunction(ScalarFunction):
             ),
             keywords=["formula", "molecular formula", "hill", "composition", "elements", "C9H8O4", "empirical formula"],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -277,6 +280,7 @@ class InchiFunction(ScalarFunction):
             ),
             keywords=["inchi", "identifier", "iupac", "structure key", "standard inchi", "cross-reference", "lookup"],
             relative_path=_SRC,
+            category="identity",
         )
         examples = [
             FunctionExample(
@@ -340,6 +344,7 @@ class InchiKeyFunction(ScalarFunction):
                 "search",
             ],
             relative_path=_SRC,
+            category="identity",
         )
         examples = [
             FunctionExample(
@@ -398,6 +403,7 @@ class MolWeightFunction(ScalarFunction):
             ),
             keywords=["molecular weight", "mw", "mass", "g/mol", "average mass", "lipinski", "descriptor"],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -449,6 +455,7 @@ class ExactMassFunction(ScalarFunction):
             ),
             keywords=["exact mass", "monoisotopic", "mass spec", "da", "dalton", "m/z", "descriptor", "isotope"],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -511,6 +518,7 @@ class LogPFunction(ScalarFunction):
                 "druglikeness",
             ],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -573,6 +581,7 @@ class TpsaFunction(ScalarFunction):
                 "druglikeness",
             ],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -636,6 +645,7 @@ class NumAtomsFunction(ScalarFunction):
                 "descriptor",
             ],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -687,6 +697,7 @@ class NumRingsFunction(ScalarFunction):
             ),
             keywords=["ring count", "num rings", "sssr", "cycles", "aromatic", "polycyclic", "rigidity", "descriptor"],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -745,6 +756,7 @@ class NumRotatableBondsFunction(ScalarFunction):
                 "druglikeness",
             ],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -795,6 +807,7 @@ class NumHDonorsFunction(ScalarFunction):
             ),
             keywords=["hydrogen bond donors", "hbd", "h donors", "lipinski", "nhoh", "druglikeness", "descriptor"],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -844,6 +857,7 @@ class NumHAcceptorsFunction(ScalarFunction):
             ),
             keywords=["hydrogen bond acceptors", "hba", "h acceptors", "lipinski", "druglikeness", "descriptor"],
             relative_path=_SRC,
+            category="descriptors",
         )
         examples = [
             FunctionExample(
@@ -886,11 +900,10 @@ class MorganFingerprintFunction(ScalarFunction):
                     "**Use it** to vectorize molecules for similarity search, clustering, or as "
                     "machine-learning features. Two molecules' fingerprints are compared with "
                     "`tanimoto`.\n\n"
-                    "Two arities share this name:\n\n"
-                    "- `morgan_fingerprint(smiles)` -- defaults `radius=2`, `nbits=2048`.\n"
-                    "- `morgan_fingerprint(smiles, radius, nbits)` -- explicit control.\n\n"
-                    "- **Input**: a SMILES string (`VARCHAR`), optionally `radius` and `nbits` "
-                    "(`INTEGER`).\n"
+                    "This one-argument form uses the default parameters `radius=2` and "
+                    "`nbits=2048`. A separate three-argument overload, "
+                    "`morgan_fingerprint(smiles, radius, nbits)`, lets you set them explicitly.\n\n"
+                    "- **Input**: a single SMILES string (`VARCHAR`).\n"
                     "- **Output**: `VARCHAR` hex-encoded bit vector, or `NULL` if invalid.\n\n"
                     "**Edge cases**: larger `radius` captures bigger atom environments; smaller "
                     "`nbits` increases bit collisions. Fingerprints are only comparable when built "
@@ -920,6 +933,7 @@ class MorganFingerprintFunction(ScalarFunction):
                     "descriptor",
                 ],
                 relative_path=_SRC,
+                category="fingerprint",
             ),
             # VGI509: guaranteed-runnable, catalog-qualified examples (no backend needed).
             "vgi.executable_examples": (
@@ -968,8 +982,8 @@ class MorganFingerprintParamsFunction(ScalarFunction):
                 "neighborhood size) and `nbits` (vector length).\n\n"
                 "**Use it** when you need fingerprints at a non-default resolution for similarity "
                 "search or ML features. Compare results with `tanimoto`.\n\n"
-                "- **Input**: a SMILES string (`VARCHAR`), `radius` (`INTEGER`), `nbits` "
-                "(`INTEGER`).\n"
+                "- **Input**: a SMILES string (`VARCHAR`), `radius` (`BIGINT`), `nbits` "
+                "(`BIGINT`).\n"
                 "- **Output**: `VARCHAR` hex bit vector, or `NULL` if invalid.\n\n"
                 "**Edge cases**: only fingerprints built with identical `radius`/`nbits` are "
                 "comparable. `NULL`/invalid input returns `NULL`."
@@ -997,6 +1011,7 @@ class MorganFingerprintParamsFunction(ScalarFunction):
                 "features",
             ],
             relative_path=_SRC,
+            category="fingerprint",
         )
         examples = [
             FunctionExample(
@@ -1037,7 +1052,8 @@ class TanimotoFunction(ScalarFunction):
                 "Two arities share this name:\n\n"
                 "- `tanimoto(a, b)` -- Morgan `radius=2`.\n"
                 "- `tanimoto(a, b, radius)` -- explicit radius.\n\n"
-                "- **Input**: two SMILES strings (`VARCHAR`), optional `radius` (`INTEGER`).\n"
+                "- **Input**: two SMILES strings (`VARCHAR`); a separate three-argument overload "
+                "adds an explicit Morgan `radius` (`BIGINT`).\n"
                 "- **Output**: `DOUBLE` similarity in [0, 1], or `NULL` if either SMILES is "
                 "invalid.\n\n"
                 "**Edge cases**: identical molecules score exactly `1.0`; disjoint structures "
@@ -1065,6 +1081,7 @@ class TanimotoFunction(ScalarFunction):
                 "similarity search",
             ],
             relative_path=_SRC,
+            category="similarity",
         )
         examples = [
             FunctionExample(
@@ -1103,7 +1120,7 @@ class TanimotoRadiusFunction(ScalarFunction):
                 "their SMILES) over Morgan fingerprints built at a caller-chosen `radius`, "
                 "returning a value in [0, 1].\n\n"
                 "**Use it** when you want similarity at a specific fingerprint resolution.\n\n"
-                "- **Input**: two SMILES strings (`VARCHAR`) and a Morgan `radius` (`INTEGER`).\n"
+                "- **Input**: two SMILES strings (`VARCHAR`) and a Morgan `radius` (`BIGINT`).\n"
                 "- **Output**: `DOUBLE` similarity in [0, 1], or `NULL` if either SMILES is "
                 "invalid.\n\n"
                 "**Edge cases**: identical molecules score `1.0`; both fingerprints use the same "
@@ -1130,6 +1147,7 @@ class TanimotoRadiusFunction(ScalarFunction):
                 "similarity search",
             ],
             relative_path=_SRC,
+            category="similarity",
         )
         examples = [
             FunctionExample(
@@ -1206,6 +1224,7 @@ class SubstructureMatchFunction(ScalarFunction):
                 "substructure search",
             ],
             relative_path=_SRC,
+            category="substructure",
         )
         examples = [
             FunctionExample(

@@ -109,6 +109,7 @@ class LipinskiFunction(TableFunctionGenerator[_LipinskiArgs]):
                     "filter",
                 ],
                 relative_path="vgi_chem/tables.py",
+                category="druglikeness",
             ),
             "vgi.result_columns_md": (
                 "| column | type | description |\n"
