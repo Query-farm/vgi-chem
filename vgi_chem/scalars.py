@@ -34,6 +34,7 @@ The ``lipinski(smiles)`` rule-of-five breakdown is set-returning and lives in
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from typing import Annotated
 
@@ -46,6 +47,44 @@ from . import chem
 from .meta import object_tags
 
 _SRC = "vgi_chem/scalars.py"
+
+# ``morgan_fingerprint`` has two arity overloads that share one name, so the SDK
+# merges their metadata into a single catalog object. To keep that merged view
+# self-consistent (VGI180), BOTH overloads carry the SAME doc, which describes the
+# defaults-only and explicit-parameter signatures together rather than titling
+# itself as one specific arity.
+_MORGAN_DOC_LLM = (
+    "## morgan_fingerprint\n\n"
+    "Builds a **Morgan (ECFP-like) circular fingerprint** for a molecule from its SMILES and "
+    "returns it as a hexadecimal bit-string.\n\n"
+    "Two arities share this name:\n\n"
+    "- `morgan_fingerprint(smiles)` -- uses the fixed defaults `radius=2` and `nbits=2048`.\n"
+    "- `morgan_fingerprint(smiles, radius, nbits)` -- set the atom-neighborhood `radius` and the "
+    "bit-vector length `nbits` explicitly.\n\n"
+    "**Use it** to vectorize molecules for similarity search, clustering, or as machine-learning "
+    "features. Two molecules' fingerprints are compared with `tanimoto`.\n\n"
+    "- **Input**: a SMILES string (`VARCHAR`); the three-argument form additionally takes "
+    "`radius` (`BIGINT`) and `nbits` (`BIGINT`).\n"
+    "- **Output**: `VARCHAR` hex-encoded bit vector, or `NULL` if invalid.\n\n"
+    "**Edge cases**: a larger `radius` captures bigger atom environments; a smaller `nbits` "
+    "increases bit collisions. Only fingerprints built with identical `radius`/`nbits` are "
+    "comparable. `NULL`/invalid input returns `NULL`."
+)
+_MORGAN_DOC_MD = (
+    "# morgan_fingerprint\n\n"
+    "Morgan/ECFP circular fingerprint as a hex bit-string from a SMILES string.\n\n"
+    "## Signatures\n\n"
+    "- `morgan_fingerprint(smiles)` -- defaults `radius=2`, `nbits=2048`.\n"
+    "- `morgan_fingerprint(smiles, radius, nbits)` -- explicit radius and bit length.\n\n"
+    "## Usage\n\n"
+    "```sql\n"
+    "SELECT chem.main.morgan_fingerprint('CCO');            -- radius=2, nbits=2048\n"
+    "SELECT chem.main.morgan_fingerprint('CCO', 3, 1024);   -- explicit\n"
+    "```\n\n"
+    "## Notes\n\n"
+    "Compare two fingerprints with `tanimoto`. Only fingerprints built with the same "
+    "`radius`/`nbits` are comparable. Returns `NULL` on invalid input."
+)
 
 # ---------------------------------------------------------------------------
 # Small mapping helpers: apply a pure ``str -> X`` function across an array,
@@ -108,8 +147,8 @@ class IsValidSmilesFunction(ScalarFunction):
                 "otherwise.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.is_valid_smiles('CCO');   -- true (ethanol)\n"
-                "SELECT chem.is_valid_smiles('xyz');   -- false\n"
+                "SELECT chem.main.is_valid_smiles('CCO');   -- true (ethanol)\n"
+                "SELECT chem.main.is_valid_smiles('xyz');   -- false\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "`NULL` in yields `NULL` out; any other unparseable input yields `false`, so this "
@@ -121,11 +160,11 @@ class IsValidSmilesFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.is_valid_smiles('CCO')",
+                sql="SELECT chem.main.is_valid_smiles('CCO')",
                 description="A valid SMILES (ethanol)",
             ),
             FunctionExample(
-                sql="SELECT chem.is_valid_smiles('xyz')",
+                sql="SELECT chem.main.is_valid_smiles('xyz')",
                 description="An invalid SMILES -> false",
             ),
         ]
@@ -166,9 +205,10 @@ class CanonicalSmilesFunction(ScalarFunction):
                 "deduplication.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.canonical_smiles('OCC');   -- 'CCO'\n"
-                "SELECT DISTINCT chem.canonical_smiles(smiles) FROM compounds;\n"
+                "SELECT chem.main.canonical_smiles('OCC');   -- 'CCO'\n"
                 "```\n\n"
+                "Apply it over a whole SMILES column with a `DISTINCT` projection to deduplicate "
+                "structures written different ways.\n\n"
                 "## Notes\n\n"
                 "Returns `NULL` on invalid input. Two strings denoting the same molecule "
                 "canonicalize to the same value, making this a reliable grouping/join key."
@@ -179,7 +219,7 @@ class CanonicalSmilesFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.canonical_smiles('OCC')",
+                sql="SELECT chem.main.canonical_smiles('OCC')",
                 description="Canonicalize ethanol -> 'CCO'",
             ),
         ]
@@ -220,7 +260,7 @@ class MolFormulaFunction(ScalarFunction):
                 "Molecular formula in Hill notation from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O');  -- 'C9H8O4'\n"
+                "SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O');  -- 'C9H8O4'\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Implicit hydrogens are included. Returns `NULL` on invalid input."
@@ -231,7 +271,7 @@ class MolFormulaFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                sql="SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O')",
                 description="Molecular formula of aspirin",
             ),
         ]
@@ -272,7 +312,7 @@ class InchiFunction(ScalarFunction):
                 "Standard IUPAC InChI identifier from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.inchi('CCO');  -- 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'\n"
+                "SELECT chem.main.inchi('CCO');  -- 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Standard InChI applies the IUPAC normalization layers. Pair with `inchikey` for a "
@@ -284,7 +324,7 @@ class InchiFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.inchi('CCO')",
+                sql="SELECT chem.main.inchi('CCO')",
                 description="InChI of ethanol",
             ),
         ]
@@ -326,7 +366,7 @@ class InchiKeyFunction(ScalarFunction):
                 "Standard 27-character InChIKey hash from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
+                "SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
                 "-- 'BSYNRYMUTXBXSQ-UHFFFAOYSA-N'\n"
                 "```\n\n"
                 "## Notes\n\n"
@@ -348,7 +388,7 @@ class InchiKeyFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                sql="SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')",
                 description="InChIKey of aspirin -> 'BSYNRYMUTXBXSQ-UHFFFAOYSA-N'",
             ),
         ]
@@ -395,7 +435,7 @@ class MolWeightFunction(ScalarFunction):
                 "Average molecular weight in g/mol from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT ROUND(chem.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2);  -- 180.16\n"
+                "SELECT ROUND(chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2);  -- 180.16\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Isotope-averaged weight; see `exact_mass` for the monoisotopic mass. Returns "
@@ -407,7 +447,7 @@ class MolWeightFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                sql="SELECT chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O')",
                 description="Molecular weight of aspirin (~180.16)",
             ),
         ]
@@ -447,7 +487,7 @@ class ExactMassFunction(ScalarFunction):
                 "Monoisotopic exact mass (Da) from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.exact_mass('CCO');  -- ~46.0419\n"
+                "SELECT chem.main.exact_mass('CCO');  -- ~46.0419\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Uses the most-abundant isotope per element; contrast with `mol_weight` (average). "
@@ -459,7 +499,7 @@ class ExactMassFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.exact_mass('CCO')",
+                sql="SELECT chem.main.exact_mass('CCO')",
                 description="Exact mass of ethanol",
             ),
         ]
@@ -501,7 +541,7 @@ class LogPFunction(ScalarFunction):
                 "Crippen-model octanol-water partition coefficient (logP) from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.logp('CCO');  -- small negative/near-zero (hydrophilic)\n"
+                "SELECT chem.main.logp('CCO');  -- small negative/near-zero (hydrophilic)\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "An estimate from Crippen atom contributions, not an experimental measurement. "
@@ -522,7 +562,7 @@ class LogPFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.logp('CCO')",
+                sql="SELECT chem.main.logp('CCO')",
                 description="logP of ethanol",
             ),
         ]
@@ -564,7 +604,7 @@ class TpsaFunction(ScalarFunction):
                 "Topological polar surface area (Angstrom^2) from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O');  -- ~63.6 for aspirin\n"
+                "SELECT chem.main.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O');  -- ~63.6 for aspirin\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "A 2D topological estimate (Ertl). Lower TPSA generally predicts better "
@@ -585,7 +625,7 @@ class TpsaFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                sql="SELECT chem.main.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O')",
                 description="TPSA of aspirin",
             ),
         ]
@@ -629,7 +669,7 @@ class NumAtomsFunction(ScalarFunction):
                 "Number of heavy (non-hydrogen) atoms from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.num_atoms('c1ccccc1');  -- 6 (benzene)\n"
+                "SELECT chem.main.num_atoms('c1ccccc1');  -- 6 (benzene)\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Hydrogens are excluded. A handy molecular-size filter. Returns `NULL` on invalid "
@@ -649,7 +689,7 @@ class NumAtomsFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.num_atoms('c1ccccc1')",
+                sql="SELECT chem.main.num_atoms('c1ccccc1')",
                 description="Heavy-atom count of benzene (6)",
             ),
         ]
@@ -690,7 +730,7 @@ class NumRingsFunction(ScalarFunction):
                 "Ring count (smallest set of smallest rings) from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.num_rings('c1ccccc1');  -- 1 (benzene)\n"
+                "SELECT chem.main.num_rings('c1ccccc1');  -- 1 (benzene)\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Uses the SSSR convention. Returns `NULL` on invalid input."
@@ -701,7 +741,7 @@ class NumRingsFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.num_rings('c1ccccc1')",
+                sql="SELECT chem.main.num_rings('c1ccccc1')",
                 description="Ring count of benzene (1)",
             ),
         ]
@@ -741,7 +781,7 @@ class NumRotatableBondsFunction(ScalarFunction):
                 "Number of rotatable bonds from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.num_rotatable_bonds('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
+                "SELECT chem.main.num_rotatable_bonds('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "A flexibility metric (Veber's rule). Returns `NULL` on invalid input."
@@ -760,7 +800,7 @@ class NumRotatableBondsFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.num_rotatable_bonds('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                sql="SELECT chem.main.num_rotatable_bonds('CC(=O)OC1=CC=CC=C1C(=O)O')",
                 description="Rotatable bonds of aspirin",
             ),
         ]
@@ -800,7 +840,7 @@ class NumHDonorsFunction(ScalarFunction):
                 "Number of hydrogen-bond donors (Lipinski NHOH count) from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.num_h_donors('CCO');  -- 1 (ethanol O-H)\n"
+                "SELECT chem.main.num_h_donors('CCO');  -- 1 (ethanol O-H)\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Lipinski rule HBD <= 5. Returns `NULL` on invalid input."
@@ -811,7 +851,7 @@ class NumHDonorsFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.num_h_donors('CCO')",
+                sql="SELECT chem.main.num_h_donors('CCO')",
                 description="H-bond donors of ethanol (1)",
             ),
         ]
@@ -850,7 +890,7 @@ class NumHAcceptorsFunction(ScalarFunction):
                 "Number of hydrogen-bond acceptors (Lipinski NO count) from a SMILES string.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.num_h_acceptors('CCO');  -- 1 (ethanol O)\n"
+                "SELECT chem.main.num_h_acceptors('CCO');  -- 1 (ethanol O)\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Lipinski rule HBA <= 10. Returns `NULL` on invalid input."
@@ -861,7 +901,7 @@ class NumHAcceptorsFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.num_h_acceptors('CCO')",
+                sql="SELECT chem.main.num_h_acceptors('CCO')",
                 description="H-bond acceptors of ethanol",
             ),
         ]
@@ -893,34 +933,8 @@ class MorganFingerprintFunction(ScalarFunction):
         tags = {
             **object_tags(
                 title="Morgan Fingerprint (Hex)",
-                description_llm=(
-                    "## morgan_fingerprint\n\n"
-                    "Builds a **Morgan (ECFP-like) circular fingerprint** for a molecule from its "
-                    "SMILES and returns it as a hexadecimal bit-string.\n\n"
-                    "**Use it** to vectorize molecules for similarity search, clustering, or as "
-                    "machine-learning features. Two molecules' fingerprints are compared with "
-                    "`tanimoto`.\n\n"
-                    "This one-argument form uses the default parameters `radius=2` and "
-                    "`nbits=2048`. A separate three-argument overload, "
-                    "`morgan_fingerprint(smiles, radius, nbits)`, lets you set them explicitly.\n\n"
-                    "- **Input**: a single SMILES string (`VARCHAR`).\n"
-                    "- **Output**: `VARCHAR` hex-encoded bit vector, or `NULL` if invalid.\n\n"
-                    "**Edge cases**: larger `radius` captures bigger atom environments; smaller "
-                    "`nbits` increases bit collisions. Fingerprints are only comparable when built "
-                    "with the same parameters. `NULL`/invalid input returns `NULL`."
-                ),
-                description_md=(
-                    "# morgan_fingerprint\n\n"
-                    "Morgan/ECFP circular fingerprint as a hex bit-string from a SMILES string.\n\n"
-                    "## Usage\n\n"
-                    "```sql\n"
-                    "SELECT chem.morgan_fingerprint('CCO');            -- radius=2, nbits=2048\n"
-                    "SELECT chem.morgan_fingerprint('CCO', 3, 1024);   -- explicit\n"
-                    "```\n\n"
-                    "## Notes\n\n"
-                    "Compare two fingerprints with `tanimoto`. Only fingerprints built with the "
-                    "same `radius`/`nbits` are comparable. Returns `NULL` on invalid input."
-                ),
+                description_llm=_MORGAN_DOC_LLM,
+                description_md=_MORGAN_DOC_MD,
                 keywords=[
                     "morgan fingerprint",
                     "ecfp",
@@ -935,24 +949,30 @@ class MorganFingerprintFunction(ScalarFunction):
                 relative_path=_SRC,
                 category="fingerprint",
             ),
-            # VGI509: guaranteed-runnable, catalog-qualified examples (no backend needed).
-            "vgi.executable_examples": (
-                '[{"description": "Default Morgan fingerprint of ethanol (radius=2, nbits=2048).",'
-                ' "sql": "SELECT chem.morgan_fingerprint(\'CCO\') AS fp"},'
-                ' {"description": "Morgan fingerprint with an explicit radius and bit length.",'
-                ' "sql": "SELECT chem.morgan_fingerprint(\'CCO\', 3, 1024) AS fp"},'
-                ' {"description": "Tanimoto self-similarity is exactly 1.0.",'
-                " \"sql\": \"SELECT chem.tanimoto('CCO', 'CCO') AS sim\"},"
-                ' {"description": "Molecular weight of aspirin (~180.16 g/mol).",'
-                ' "sql": "SELECT ROUND(chem.mol_weight(\'CC(=O)OC1=CC=CC=C1C(=O)O\'), 2) AS mw"},'
-                ' {"description": "Phenol contains a benzene ring (SMARTS substructure match).",'
-                " \"sql\": \"SELECT chem.substructure_match('c1ccccc1O', 'c1ccccc1') AS hit\"}]"
+            # VGI509: guaranteed-runnable, catalog-qualified examples covering BOTH
+            # arities of this function (default params and explicit radius/nbits), so
+            # the demonstrated calls stay consistent with the documented signatures.
+            "vgi.executable_examples": json.dumps(
+                [
+                    {
+                        "description": "Default Morgan fingerprint of ethanol (radius=2, nbits=2048).",
+                        "sql": "SELECT chem.main.morgan_fingerprint('CCO') AS fp",
+                    },
+                    {
+                        "description": "Morgan fingerprint with an explicit radius and bit length.",
+                        "sql": "SELECT chem.main.morgan_fingerprint('CCO', 3, 1024) AS fp",
+                    },
+                ]
             ),
         }
         examples = [
             FunctionExample(
-                sql="SELECT chem.morgan_fingerprint('CCO')",
-                description="Default Morgan fingerprint of ethanol",
+                sql="SELECT chem.main.morgan_fingerprint('CCO')",
+                description="Default Morgan fingerprint of ethanol (radius=2, nbits=2048)",
+            ),
+            FunctionExample(
+                sql="SELECT chem.main.morgan_fingerprint('CCO', 3, 1024)",
+                description="Morgan fingerprint with explicit radius=3 and nbits=1024",
             ),
         ]
 
@@ -975,30 +995,8 @@ class MorganFingerprintParamsFunction(ScalarFunction):
         categories = ["chem", "fingerprint"]
         tags = object_tags(
             title="Morgan Fingerprint (Hex)",
-            description_llm=(
-                "## morgan_fingerprint(smiles, radius, nbits)\n\n"
-                "Explicit-parameter arity of the **Morgan (ECFP-like) circular fingerprint**: "
-                "build a fixed-length hex bit-string with a caller-chosen `radius` (atom "
-                "neighborhood size) and `nbits` (vector length).\n\n"
-                "**Use it** when you need fingerprints at a non-default resolution for similarity "
-                "search or ML features. Compare results with `tanimoto`.\n\n"
-                "- **Input**: a SMILES string (`VARCHAR`), `radius` (`BIGINT`), `nbits` "
-                "(`BIGINT`).\n"
-                "- **Output**: `VARCHAR` hex bit vector, or `NULL` if invalid.\n\n"
-                "**Edge cases**: only fingerprints built with identical `radius`/`nbits` are "
-                "comparable. `NULL`/invalid input returns `NULL`."
-            ),
-            description_md=(
-                "# morgan_fingerprint (explicit params)\n\n"
-                "Morgan/ECFP fingerprint with caller-supplied `radius` and `nbits`.\n\n"
-                "## Usage\n\n"
-                "```sql\n"
-                "SELECT chem.morgan_fingerprint('CCO', 3, 1024);\n"
-                "```\n\n"
-                "## Notes\n\n"
-                "Compare with `tanimoto`; keep `radius`/`nbits` consistent across the set. Returns "
-                "`NULL` on invalid input."
-            ),
+            description_llm=_MORGAN_DOC_LLM,
+            description_md=_MORGAN_DOC_MD,
             keywords=[
                 "morgan fingerprint",
                 "ecfp",
@@ -1015,7 +1013,7 @@ class MorganFingerprintParamsFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.morgan_fingerprint('CCO', 3, 1024)",
+                sql="SELECT chem.main.morgan_fingerprint('CCO', 3, 1024)",
                 description="Morgan fingerprint with radius=3, nbits=1024",
             ),
         ]
@@ -1064,8 +1062,8 @@ class TanimotoFunction(ScalarFunction):
                 "Tanimoto (Jaccard) similarity over Morgan fingerprints for two SMILES strings.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.tanimoto('CCO', 'CCO');     -- 1.0\n"
-                "SELECT chem.tanimoto('CCO', 'CCC', 2);  -- explicit radius\n"
+                "SELECT chem.main.tanimoto('CCO', 'CCO');     -- 1.0\n"
+                "SELECT chem.main.tanimoto('CCO', 'CCC', 2);  -- explicit radius\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Range [0, 1]; 1.0 is identical. Returns `NULL` if either input is invalid."
@@ -1085,7 +1083,7 @@ class TanimotoFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.tanimoto('CCO', 'CCO')",
+                sql="SELECT chem.main.tanimoto('CCO', 'CCO')",
                 description="Self-similarity is 1.0",
             ),
         ]
@@ -1131,7 +1129,7 @@ class TanimotoRadiusFunction(ScalarFunction):
                 "Tanimoto similarity over Morgan fingerprints at a chosen `radius`.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.tanimoto('CCO', 'CCC', 2);\n"
+                "SELECT chem.main.tanimoto('CCO', 'CCC', 2);\n"
                 "```\n\n"
                 "## Notes\n\n"
                 "Range [0, 1]. Returns `NULL` if either input is invalid."
@@ -1151,7 +1149,7 @@ class TanimotoRadiusFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.tanimoto('CCO', 'CCC', 2)",
+                sql="SELECT chem.main.tanimoto('CCO', 'CCC', 2)",
                 description="Tanimoto similarity with radius=2",
             ),
         ]
@@ -1207,9 +1205,10 @@ class SubstructureMatchFunction(ScalarFunction):
                 "Boolean SMARTS substructure test over a SMILES molecule.\n\n"
                 "## Usage\n\n"
                 "```sql\n"
-                "SELECT chem.substructure_match('c1ccccc1O', 'c1ccccc1');  -- true (phenol has benzene)\n"
-                "SELECT * FROM compounds WHERE chem.substructure_match(smiles, '[CX3](=O)[OX2H1]');\n"
+                "SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1');  -- true (phenol has benzene)\n"
                 "```\n\n"
+                "Use it in a `WHERE` predicate to keep only compounds carrying a scaffold or "
+                "functional group -- e.g. the carboxylic-acid SMARTS `[CX3](=O)[OX2H1]`.\n\n"
                 "## Notes\n\n"
                 "Returns `NULL` when the SMILES or the SMARTS is invalid; otherwise `true`/`false`."
             ),
@@ -1228,7 +1227,7 @@ class SubstructureMatchFunction(ScalarFunction):
         )
         examples = [
             FunctionExample(
-                sql="SELECT chem.substructure_match('c1ccccc1O', 'c1ccccc1')",
+                sql="SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1')",
                 description="Phenol contains a benzene ring -> true",
             ),
         ]

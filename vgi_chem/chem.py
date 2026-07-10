@@ -343,3 +343,58 @@ def lipinski(smiles: str) -> list[tuple[str, float, bool]] | None:
         value = values[rule]
         out.append((rule, value, value <= threshold))
     return out
+
+
+# ---------------------------------------------------------------------------
+# Curated example-molecule registry (browsable discovery table).
+# ---------------------------------------------------------------------------
+
+# A small, hand-picked set of well-known molecules. Exposed as the no-argument
+# ``example_molecules()`` table function so an agent can browse real SMILES (and
+# ready-computed descriptors) without inventing structures first. Every
+# descriptor column is computed live from the SMILES via the functions above, so
+# the table can never drift from the scalars it advertises.
+_EXAMPLE_MOLECULES: tuple[tuple[str, str], ...] = (
+    ("water", "O"),
+    ("ethanol", "CCO"),
+    ("benzene", "c1ccccc1"),
+    ("phenol", "c1ccccc1O"),
+    ("acetic acid", "CC(=O)O"),
+    ("aspirin", "CC(=O)OC1=CC=CC=C1C(=O)O"),
+    ("caffeine", "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"),
+    ("ibuprofen", "CC(C)Cc1ccc(cc1)C(C)C(=O)O"),
+    ("glucose", "OCC1OC(O)C(O)C(O)C1O"),
+    ("paracetamol", "CC(=O)Nc1ccc(O)cc1"),
+    ("nicotine", "CN1CCCC1c1cccnc1"),
+    ("penicillin g", "CC1(C)SC2C(NC(=O)Cc3ccccc3)C(=O)N2C1C(=O)O"),
+)
+
+
+def example_molecules() -> list[dict[str, object]]:
+    """Return the curated example-molecule registry with live-computed descriptors.
+
+    One dict per molecule: ``name``, ``smiles``, ``formula``, ``mol_weight``,
+    ``logp``, ``tpsa``, ``h_bond_donors``, ``h_bond_acceptors``, ``num_rings``
+    and ``drug_like`` (whether the molecule passes all four Lipinski rules).
+    Every value is derived from the module's own functions, so the registry stays
+    consistent with the scalar/table functions it illustrates.
+    """
+    rows: list[dict[str, object]] = []
+    for name, smiles in _EXAMPLE_MOLECULES:
+        breakdown = lipinski(smiles) or []
+        drug_like = all(rule[2] for rule in breakdown) if breakdown else False
+        rows.append(
+            {
+                "name": name,
+                "smiles": smiles,
+                "formula": mol_formula(smiles),
+                "mol_weight": mol_weight(smiles),
+                "logp": logp(smiles),
+                "tpsa": tpsa(smiles),
+                "h_bond_donors": num_h_donors(smiles),
+                "h_bond_acceptors": num_h_acceptors(smiles),
+                "num_rings": num_rings(smiles),
+                "drug_like": drug_like,
+            }
+        )
+    return rows
