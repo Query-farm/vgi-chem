@@ -45,6 +45,12 @@ dependencies = [
 http = [
     "vgi-python[http]>=0.16.0",
 ]
+# HTTP-serving extra installed by the Docker image (`pip install '.[serve]'`):
+# same waitress-backed vgi-python[http] as `http`, named `serve` to match the
+# shared docker-publish convention (vgi-llm / vgi-etf-schwab).
+serve = [
+    "vgi-python[http]>=0.16.0",
+]
 dev = [
     "pytest>=8",
     "ruff",
@@ -52,6 +58,15 @@ dev = [
     "pydoclint",
 ]
 
+
+[project.scripts]
+# Console-script entry to the worker (used by the Docker image's stdio leg and
+# available after `pip install`/`uv sync`). Points at the wheel-importable module.
+vgi-chem-worker = "vgi_chem.worker:main"
+
+[project.urls]
+Repository = "https://github.com/Query-farm/vgi-chem"
+Issues = "https://github.com/Query-farm/vgi-chem/issues"
 
 [build-system]
 requires = ["hatchling"]
