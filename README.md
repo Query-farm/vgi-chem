@@ -99,6 +99,7 @@ query). Nothing here ever raises a SQL error on bad chemical input.
 | `morgan_fingerprint` | scalar | `(smiles[, radius, nbits])` | `VARCHAR` (hex bit-string) |
 | `tanimoto` | scalar | `(smiles_a, smiles_b[, radius])` | `DOUBLE` in `[0, 1]` |
 | `substructure_match` | scalar | `(smiles, smarts)` | `BOOLEAN` (NULL on bad SMARTS) |
+| `drug_like` | scalar | `(smiles)` | `BOOLEAN` (passes all four Lipinski rules) |
 | `lipinski` | table | `(smiles)` | `(rule VARCHAR, value DOUBLE, passes BOOLEAN)` |
 
 ### Descriptors
@@ -132,6 +133,14 @@ flag:
 ```sql
 SELECT bool_and(passes) AS drug_like
 FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');   -- true
+```
+
+For that roll-up as a single inline predicate, use the `drug_like(smiles)` scalar
+— it is exactly `bool_and(passes)` over `lipinski`, so you can filter a whole
+column of compounds without a subquery:
+
+```sql
+SELECT smiles FROM compounds WHERE chem.drug_like(smiles);
 ```
 
 An invalid SMILES yields **no rows**.

@@ -153,6 +153,23 @@ class TestLipinski:
         assert chem.lipinski("xyz") is None
 
 
+class TestDrugLike:
+    def test_aspirin_true(self) -> None:
+        # Aspirin passes all four Lipinski rules.
+        assert chem.drug_like(ASPIRIN) is True
+
+    def test_matches_lipinski_aggregate(self) -> None:
+        # The scalar predicate is exactly bool_and(passes) over the breakdown.
+        for smiles in (ASPIRIN, CAFFEINE, ETHANOL, BENZENE):
+            rows = chem.lipinski(smiles)
+            assert rows is not None
+            assert chem.drug_like(smiles) is all(r[2] for r in rows)
+
+    def test_invalid(self) -> None:
+        assert chem.drug_like("xyz") is None
+        assert chem.drug_like("") is None
+
+
 @pytest.mark.parametrize(
     "fn",
     [
@@ -164,6 +181,7 @@ class TestLipinski:
         chem.logp,
         chem.inchikey_of,
         chem.morgan_fingerprint,
+        chem.drug_like,
     ],
 )
 def test_empty_string_safe(fn) -> None:  # type: ignore[no-untyped-def]

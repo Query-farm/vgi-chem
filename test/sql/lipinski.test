@@ -41,5 +41,24 @@ SELECT count(*) FROM chem.lipinski('xyz');
 ----
 0
 
+# drug_like scalar: collapses the four rules into a single predicate.
+query I
+SELECT chem.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O');
+----
+true
+
+# The scalar agrees with bool_and(passes) over the table function.
+query I
+SELECT chem.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O')
+     = (SELECT bool_and(passes) FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O'));
+----
+true
+
+# Invalid SMILES -> NULL (not false).
+query I
+SELECT chem.drug_like('xyz') IS NULL;
+----
+true
+
 statement ok
 DETACH chem;

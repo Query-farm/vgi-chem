@@ -44,7 +44,7 @@ from vgi.metadata import FunctionExample
 from vgi.scalar_function import ScalarFunction
 
 from . import chem
-from .meta import object_tags
+from .meta import attach_example_queries, object_tags
 
 _SRC = "vgi_chem/scalars.py"
 
@@ -1247,6 +1247,80 @@ class SubstructureMatchFunction(ScalarFunction):
         return pa.array(out, type=pa.bool_())
 
 
+# ===========================================================================
+# Drug-likeness (scalar predicate over the Lipinski rules)
+# ===========================================================================
+
+
+class DrugLikeFunction(ScalarFunction):
+    """``drug_like(smiles)`` -- True if the molecule passes all four Lipinski rules."""
+
+    class Meta:
+        """VGI scalar function metadata (name, description, categories, examples)."""
+
+        name = "drug_like"
+        description = "True if the molecule passes all four Lipinski rule-of-five criteria, NULL if invalid"
+        categories = ["chem", "druglikeness"]
+        tags = object_tags(
+            title="Lipinski Drug-Likeness Flag",
+            description_llm=(
+                "## drug_like\n\n"
+                "A single-value **drug-likeness predicate**: `true` if the molecule (given as "
+                "SMILES) passes **all four** Lipinski rule-of-five criteria, `false` if it "
+                "violates any of them.\n\n"
+                "**Use it** to filter compound libraries inline -- `WHERE drug_like(smiles)` -- "
+                "instead of aggregating the per-rule `lipinski` table function in a subquery. "
+                "Reach for `lipinski` instead when you need to see *which* rule a compound "
+                "violates.\n\n"
+                "Rules applied: molecular weight <= 500, Crippen logP <= 5, H-bond donors <= 5, "
+                "H-bond acceptors <= 10.\n\n"
+                "- **Input**: a SMILES string (`VARCHAR`).\n"
+                "- **Output**: `BOOLEAN` -- `true` if all four rules pass, else `false`; `NULL` "
+                "for `NULL` or invalid input.\n\n"
+                "**Edge cases**: this is the scalar collapse of `bool_and(passes)` over "
+                "`lipinski`; `NULL`/invalid input returns `NULL` (not `false`)."
+            ),
+            description_md=(
+                "# drug_like\n\n"
+                "Boolean Lipinski rule-of-five drug-likeness flag from a SMILES string.\n\n"
+                "## Usage\n\n"
+                "```sql\n"
+                "SELECT chem.main.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O');  -- true (aspirin)\n"
+                "```\n\n"
+                "Use it directly in a `WHERE` clause to keep only drug-like compounds; use the "
+                "`lipinski` table function when you need the per-rule breakdown.\n\n"
+                "## Notes\n\n"
+                "Passes when MW <= 500, logP <= 5, HBD <= 5 and HBA <= 10. Returns `NULL` on "
+                "invalid input."
+            ),
+            keywords=[
+                "drug-like",
+                "druglikeness",
+                "lipinski",
+                "rule of five",
+                "ro5",
+                "screening",
+                "filter",
+                "predicate",
+            ],
+            relative_path=_SRC,
+            category="druglikeness",
+        )
+        examples = [
+            FunctionExample(
+                sql="SELECT chem.main.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                description="Aspirin passes all four Lipinski rules -> true",
+            ),
+        ]
+
+    @classmethod
+    def compute(
+        cls, smiles: Annotated[pa.StringArray, Param(doc="SMILES string to screen.")]
+    ) -> Annotated[pa.BooleanArray, Returns()]:
+        """Map the pure chem function across the input Arrow array."""
+        return _map_bool(smiles, chem.drug_like)
+
+
 SCALAR_FUNCTIONS: list[type] = [
     # validity + identity
     IsValidSmilesFunction,
@@ -1272,4 +1346,10 @@ SCALAR_FUNCTIONS: list[type] = [
     TanimotoRadiusFunction,
     # substructure
     SubstructureMatchFunction,
+    # drug-likeness
+    DrugLikeFunction,
 ]
+
+# VGI515: give every example a description by mirroring Meta.examples into a
+# vgi.example_queries tag (arity overloads aggregated by function name).
+attach_example_queries(SCALAR_FUNCTIONS)

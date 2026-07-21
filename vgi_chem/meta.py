@@ -18,7 +18,8 @@ per-object (VGI139): the source link lives only on the catalog object.
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 
 def keywords_json(keywords: Sequence[str]) -> str:
@@ -57,3 +58,41 @@ def object_tags(
         "vgi.keywords": keywords_json(keywords),
         "vgi.category": category,
     }
+
+
+def attach_example_queries(functions: Iterable[Any]) -> None:
+    """Mirror each function's ``Meta.examples`` into a ``vgi.example_queries`` tag.
+
+    The native ``duckdb_functions().examples`` carrier surfaces a function's
+    ``Meta.examples`` SQL but **drops the per-example description**, so the linter
+    (VGI515) flags every example as description-less. The ``vgi.example_queries``
+    tag is the parallel carrier that keeps descriptions, and the loader dedupes
+    the two by SQL. We therefore emit a JSON list of ``{"description","sql"}``
+    objects whose SQL is byte-identical to each ``FunctionExample`` so the two
+    carriers collapse to one described example per query.
+
+    For arity overloads that share a ``Meta.name`` (``morgan_fingerprint``,
+    ``tanimoto``), the described examples are aggregated by name across the
+    overload classes so the single merged catalog object is fully described.
+    """
+    by_name: dict[str, list[dict[str, str]]] = {}
+    classes_by_name: dict[str, list[Any]] = {}
+    for fn in functions:
+        meta = fn.Meta
+        name = meta.name
+        entries = by_name.setdefault(name, [])
+        classes_by_name.setdefault(name, []).append(fn)
+        seen = {" ".join(e["sql"].split()).lower() for e in entries}
+        for ex in getattr(meta, "examples", ()):
+            key = " ".join(ex.sql.split()).lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            entries.append({"description": ex.description, "sql": ex.sql})
+    for name, entries in by_name.items():
+        payload = json.dumps(entries)
+        for fn in classes_by_name[name]:
+            # ``Meta.tags`` may be a fresh dict per class; set the aggregated tag on
+            # every overload so the merged object is described regardless of which
+            # overload's tags the loader reads first.
+            fn.Meta.tags = {**fn.Meta.tags, "vgi.example_queries": payload}

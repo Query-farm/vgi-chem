@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "vgi-python[http]>=0.14.0",
+#     "vgi-python[http]>=0.16.0",
 #     "rdkit>=2024.3",
 #     "pyarrow",
 # ]
@@ -90,12 +90,12 @@ _DISCOVERY_TABLES: list[Table] = [
                 "as a regular table you can read without parentheses -- the zero-argument discovery "
                 "entry point for the `chem` catalog.\n\n"
                 "## Columns\n\n"
-                "- `name` (VARCHAR, primary key), `smiles`, `formula`\n"
-                "- `mol_weight` (DOUBLE, g/mol), `logp` (DOUBLE), `tpsa` (DOUBLE, Angstrom^2)\n"
-                "- `h_bond_donors`, `h_bond_acceptors`, `num_rings` (INTEGER)\n"
-                "- `drug_like` (BOOLEAN) -- passes all four Lipinski rules\n\n"
-                "Read it directly to discover valid SMILES inputs; see the table's example queries "
-                "for ready-to-run SQL."
+                "- `name` (`VARCHAR`, primary key), `smiles`, `formula`\n"
+                "- `mol_weight` (`DOUBLE`, g/mol), `logp` (`DOUBLE`), `tpsa` (`DOUBLE`, Angstrom^2)\n"
+                "- `h_bond_donors`, `h_bond_acceptors`, `num_rings` (`INTEGER`)\n"
+                "- `drug_like` (`BOOLEAN`) -- passes all four Lipinski rules\n\n"
+                "Read it directly to discover valid SMILES inputs to feed the scalar functions, or "
+                "to compare descriptor ranges across common drugs."
             ),
             "vgi.keywords": keywords_json(
                 [
@@ -203,8 +203,8 @@ _CHEM_CATALOG = Catalog(
             "property filtering and QSAR, circular **fingerprints** and Tanimoto **similarity** "
             "for search and clustering, SMARTS **substructure** matching for structural filters, "
             "and Lipinski **drug-likeness** screening. Everything operates on SMILES strings and "
-            "runs inline over whole tables. List the schema to discover the individual functions "
-            "and their signatures.\n\n"
+            "runs inline over whole tables, so a column of compounds becomes a column of "
+            "properties, identifiers, fingerprints or pass/fail flags in a single query.\n\n"
             "## Getting started\n\n"
             "Attach the catalog with `ATTACH 'chem' (TYPE vgi, LOCATION 'uv run chem_worker.py')`, "
             "then call any function inline in a query. Pass a SMILES string to get a molecular "
@@ -380,6 +380,15 @@ _CHEM_CATALOG = Catalog(
                     "ignore_column_names": True,
                 },
                 {
+                    "name": "drug_like_predicate",
+                    "prompt": (
+                        "Using a single scalar drug-likeness predicate, is aspirin (SMILES "
+                        "CC(=O)OC1=CC=CC=C1C(=O)O) drug-like? Return a boolean."
+                    ),
+                    "reference_sql": "SELECT chem.main.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                    "ignore_column_names": True,
+                },
+                {
                     "name": "browse_example_molecules",
                     "prompt": (
                         "How many molecules are listed in the worker's built-in example molecule reference table?"
@@ -476,16 +485,46 @@ _CHEM_CATALOG = Catalog(
                         },
                     ]
                 ),
-                # VGI506: representative, catalog-qualified example queries for the schema.
-                "vgi.example_queries": (
-                    "SELECT chem.main.is_valid_smiles('CCO');\n"
-                    "SELECT chem.main.canonical_smiles('OCC');\n"
-                    "SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
-                    "SELECT ROUND(chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2);\n"
-                    "SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O');\n"
-                    "SELECT chem.main.tanimoto('CCO', 'CCO');\n"
-                    "SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1');\n"
-                    "SELECT * FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');"
+                # VGI506/VGI515: representative, catalog-qualified example queries for
+                # the schema, each carrying a human-readable description.
+                "vgi.example_queries": json.dumps(
+                    [
+                        {
+                            "description": "Check that a SMILES string parses to a real molecule.",
+                            "sql": "SELECT chem.main.is_valid_smiles('CCO')",
+                        },
+                        {
+                            "description": "Canonicalize a SMILES so equivalent spellings compare equal.",
+                            "sql": "SELECT chem.main.canonical_smiles('OCC')",
+                        },
+                        {
+                            "description": "Molecular formula of aspirin in Hill notation.",
+                            "sql": "SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                        },
+                        {
+                            "description": "Molecular weight of aspirin, rounded to two decimals.",
+                            "sql": "SELECT ROUND(chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2)",
+                        },
+                        {
+                            "description": "InChIKey structure hash of aspirin for joins and lookup.",
+                            "sql": "SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')",
+                        },
+                        {
+                            "description": "Tanimoto self-similarity is exactly 1.0.",
+                            "sql": "SELECT chem.main.tanimoto('CCO', 'CCO')",
+                        },
+                        {
+                            "description": "Does phenol contain a benzene ring (SMARTS match)?",
+                            "sql": "SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1')",
+                        },
+                        {
+                            "description": "Lipinski rule-of-five breakdown for aspirin, one row per rule.",
+                            "sql": (
+                                "SELECT rule, value, passes "
+                                "FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O') ORDER BY rule"
+                            ),
+                        },
+                    ]
                 ),
                 "vgi.doc_llm": (
                     "Cheminformatics functions over SMILES strings: validate/canonicalize SMILES, "
@@ -502,8 +541,9 @@ _CHEM_CATALOG = Catalog(
                     "## Contents\n\n"
                     "Functions are organized into navigation categories: validity, identity and "
                     "canonicalization, molecular descriptors, fingerprints, similarity, "
-                    "substructure search, and drug-likeness. List the schema to enumerate the "
-                    "functions in each category, including their signatures and column docs.\n\n"
+                    "substructure search, and drug-likeness. Scalars return one value per SMILES "
+                    "row; the sole set-returning function, `lipinski`, expands one molecule into "
+                    "one row per rule.\n\n"
                     "## Usage\n\n"
                     "Call a function by its qualified name, `chem.main.<fn>` — or `chem.<fn>`, since "
                     "`main` is the default schema. Scalars take positional arguments; `lipinski` is a "

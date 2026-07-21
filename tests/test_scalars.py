@@ -132,3 +132,9 @@ class TestSubstructure:
     def test_invalid_smiles_null(self, client: Client) -> None:
         out = _scalar(client, "substructure_match", {"s": ["xyz"], "p": [BENZENE]})
         assert out == [None]
+
+
+class TestDrugLike:
+    def test_predicate(self, client: Client) -> None:
+        out = _scalar(client, "drug_like", {"s": [ASPIRIN, "xyz", None]})
+        assert out == [True, None, None]

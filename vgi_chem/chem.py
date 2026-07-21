@@ -320,6 +320,21 @@ _LIPINSKI_RULES: tuple[tuple[str, float], ...] = (
 )
 
 
+def drug_like(smiles: str) -> bool | None:
+    """True if the molecule passes all four Lipinski rule-of-five criteria.
+
+    A scalar convenience over :func:`lipinski`: it collapses the four-rule
+    breakdown into a single drug-likeness predicate (``bool_and(passes)``), so
+    callers can filter inline with ``WHERE drug_like(smiles)`` instead of a
+    correlated subquery over the ``lipinski`` table function. Returns ``None``
+    for invalid SMILES (never raises).
+    """
+    breakdown = lipinski(smiles)
+    if breakdown is None:
+        return None
+    return all(rule[2] for rule in breakdown)
+
+
 def lipinski(smiles: str) -> list[tuple[str, float, bool]] | None:
     """Lipinski rule-of-five breakdown: one ``(rule, value, passes)`` per rule.
 
@@ -381,8 +396,6 @@ def example_molecules() -> list[dict[str, object]]:
     """
     rows: list[dict[str, object]] = []
     for name, smiles in _EXAMPLE_MOLECULES:
-        breakdown = lipinski(smiles) or []
-        drug_like = all(rule[2] for rule in breakdown) if breakdown else False
         rows.append(
             {
                 "name": name,
@@ -394,7 +407,7 @@ def example_molecules() -> list[dict[str, object]]:
                 "h_bond_donors": num_h_donors(smiles),
                 "h_bond_acceptors": num_h_acceptors(smiles),
                 "num_rings": num_rings(smiles),
-                "drug_like": drug_like,
+                "drug_like": drug_like(smiles) or False,
             }
         )
     return rows

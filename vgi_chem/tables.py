@@ -28,7 +28,7 @@ from vgi.table_function import (
 from vgi_rpc.rpc import OutputCollector
 
 from . import chem
-from .meta import object_tags
+from .meta import attach_example_queries, object_tags
 from .schema_utils import field
 
 
@@ -90,8 +90,7 @@ class LipinskiFunction(TableFunctionGenerator[_LipinskiArgs]):
                     "Four rows -- `molecular_weight`, `logp`, `h_bond_donors`, `h_bond_acceptors` "
                     "-- each with its computed `value` and a `passes` flag. Aggregate the `passes` "
                     "column with `bool_and` for a single drug-like verdict, or keep the "
-                    "non-passing rows to see which criterion a compound violates. See the example "
-                    "queries for ready-to-run SQL.\n\n"
+                    "non-passing rows to see which criterion a compound violates.\n\n"
                     "## Notes\n\n"
                     "Rules: MW <= 500, logP <= 5, HBD <= 5, HBA <= 10. An invalid SMILES returns "
                     "no rows."
@@ -235,7 +234,8 @@ class ExampleMoleculesFunction(TableFunctionGenerator[_NoArgs]):
                     "- `mol_weight` (g/mol), `logp`, `tpsa` (Angstrom^2)\n"
                     "- `h_bond_donors`, `h_bond_acceptors`, `num_rings`\n"
                     "- `drug_like` -- passes all four Lipinski rules\n\n"
-                    "See the example queries for ready-to-run SQL."
+                    "Every descriptor column is computed live from `smiles` via this catalog's own "
+                    "functions, so the registry can never drift from them."
                 ),
                 keywords=[
                     "example",
@@ -324,3 +324,7 @@ TABLE_FUNCTIONS: list[type] = [
     LipinskiFunction,
     ExampleMoleculesFunction,
 ]
+
+# VGI515: mirror each table function's Meta.examples into a vgi.example_queries
+# tag so every example carries its description.
+attach_example_queries(TABLE_FUNCTIONS)
