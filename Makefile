@@ -8,7 +8,7 @@
 # test-sql is self-contained: it points VGI_CHEM_WORKER at the worker run as a
 # uv stdio subprocess (exactly how DuckDB drives it after ATTACH) and runs the
 # files under test/sql/. haybarn-unittest is a uv tool:
-#   uv tool install haybarn-unittest   # installs ~/.local/bin/haybarn-unittest
+#   uv tool install 'haybarn-unittest<2'   # installs ~/.local/bin/haybarn-unittest
 
 # Worker command DuckDB uses for ATTACH (overridable). Use the project venv's
 # Python (populated by `uv sync`) rather than `uv run chem_worker.py`: the latter
