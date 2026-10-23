@@ -1,0 +1,64 @@
+# Private graders for `vgi-lint simulate` (VGI416). The worker publishes only
+# task names and prompts in vgi.agent_test_tasks; the canonical solutions and
+# grading options stay here in the repo, never in the catalog metadata.
+tasks:
+  - name: molecular_formula
+    reference_sql: "SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O')"
+    ignore_column_names: true
+  - name: validate_smiles
+    reference_sql: "SELECT chem.main.is_valid_smiles('xyz')"
+    ignore_column_names: true
+  - name: canonicalize_smiles
+    reference_sql: "SELECT chem.main.canonical_smiles('OCC')"
+    ignore_column_names: true
+  - name: inchi_of_ethanol
+    reference_sql: "SELECT chem.main.inchi('CCO')"
+    ignore_column_names: true
+  - name: inchikey
+    reference_sql: "SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')"
+    ignore_column_names: true
+  - name: molecular_weight
+    reference_sql: "SELECT ROUND(chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2)"
+    ignore_column_names: true
+  - name: exact_mass_threshold
+    reference_sql: "SELECT chem.main.exact_mass('CCO') BETWEEN 46.0 AND 46.1"
+    ignore_column_names: true
+  - name: logp_lipophilic
+    reference_sql: "SELECT chem.main.logp('c1ccccc1') > 1"
+    ignore_column_names: true
+  - name: tpsa_threshold
+    reference_sql: "SELECT chem.main.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O') > 50"
+    ignore_column_names: true
+  - name: heavy_atom_count
+    reference_sql: "SELECT chem.main.num_atoms('c1ccccc1')"
+    ignore_column_names: true
+  - name: ring_count
+    reference_sql: "SELECT chem.main.num_rings('CN1C=NC2=C1C(=O)N(C(=O)N2C)C')"
+    ignore_column_names: true
+  - name: rotatable_bond_count
+    reference_sql: "SELECT chem.main.num_rotatable_bonds('CC(C)Cc1ccc(cc1)C(C)C(=O)O')"
+    ignore_column_names: true
+  - name: h_bond_donors
+    reference_sql: "SELECT chem.main.num_h_donors('OCC1OC(O)C(O)C(O)C1O')"
+    ignore_column_names: true
+  - name: h_bond_acceptors
+    reference_sql: "SELECT chem.main.num_h_acceptors('CN1C=NC2=C1C(=O)N(C(=O)N2C)C')"
+    ignore_column_names: true
+  - name: morgan_fingerprint_stable
+    reference_sql: "SELECT chem.main.morgan_fingerprint('CCO') = chem.main.morgan_fingerprint('CCO')"
+    ignore_column_names: true
+  - name: tanimoto_self_similarity
+    reference_sql: "SELECT chem.main.tanimoto('CCO', 'CCO')"
+    ignore_column_names: true
+  - name: substructure_search
+    reference_sql: "SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1')"
+    ignore_column_names: true
+  - name: lipinski_drug_like
+    reference_sql: "SELECT bool_and(passes) FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O')"
+    ignore_column_names: true
+  - name: drug_like_predicate
+    reference_sql: "SELECT chem.main.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O')"
+    ignore_column_names: true
+  - name: browse_example_molecules
+    reference_sql: "SELECT count(*) FROM chem.main.example_molecules()"
+    ignore_column_names: true

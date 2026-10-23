@@ -240,41 +240,32 @@ _CHEM_CATALOG = Catalog(
         "vgi.license": "MIT",
         "vgi.support_contact": "https://github.com/Query-farm/vgi-chem/issues",
         "vgi.support_policy_url": "https://github.com/Query-farm/vgi-chem/blob/main/README.md",
-        # VGI152/VGI920: analyst-suitability suite. Each task's `prompt` is the only
-        # field shown to the analyst; `reference_sql` is a deterministic grader-only
-        # canonical solution. `ignore_column_names` relaxes the result-column labels
-        # (analysts alias freely). All references are backend-deterministic RDKit calls.
+        # VGI152/VGI920: analyst-suitability suite. Each task is a public
+        # {name, prompt} object; the prompt is the only field shown to the analyst.
+        # VGI416: the grader-only fields (`reference_sql`, `ignore_column_names`) live
+        # in the private `vgi-agent-tests.yaml` sidecar at the repo root. All
+        # references are backend-deterministic RDKit calls.
         "vgi.agent_test_tasks": json.dumps(
             [
                 {
                     "name": "molecular_formula",
                     "prompt": ("The SMILES for aspirin is CC(=O)OC1=CC=CC=C1C(=O)O. What is its molecular formula?"),
-                    "reference_sql": "SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "validate_smiles",
                     "prompt": "Is the string 'xyz' a valid SMILES molecule? Return a boolean.",
-                    "reference_sql": "SELECT chem.main.is_valid_smiles('xyz')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "canonicalize_smiles",
                     "prompt": ("Rewrite the SMILES 'OCC' into its canonical form (it denotes ethanol)."),
-                    "reference_sql": "SELECT chem.main.canonical_smiles('OCC')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "inchi_of_ethanol",
                     "prompt": "What is the standard InChI string for ethanol, whose SMILES is CCO?",
-                    "reference_sql": "SELECT chem.main.inchi('CCO')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "inchikey",
                     "prompt": ("Give the InChIKey identifier for aspirin, whose SMILES is CC(=O)OC1=CC=CC=C1C(=O)O."),
-                    "reference_sql": "SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "molecular_weight",
@@ -282,8 +273,6 @@ _CHEM_CATALOG = Catalog(
                         "Compute the molecular weight of aspirin (SMILES "
                         "CC(=O)OC1=CC=CC=C1C(=O)O), rounded to two decimal places."
                     ),
-                    "reference_sql": "SELECT ROUND(chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2)",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "exact_mass_threshold",
@@ -291,8 +280,6 @@ _CHEM_CATALOG = Catalog(
                         "Is the monoisotopic (exact) mass of ethanol (SMILES CCO) between "
                         "46.0 and 46.1 daltons? Return a boolean."
                     ),
-                    "reference_sql": "SELECT chem.main.exact_mass('CCO') BETWEEN 46.0 AND 46.1",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "logp_lipophilic",
@@ -300,8 +287,6 @@ _CHEM_CATALOG = Catalog(
                         "Is benzene (SMILES c1ccccc1) lipophilic, i.e. is its Crippen logP "
                         "greater than 1? Return a boolean."
                     ),
-                    "reference_sql": "SELECT chem.main.logp('c1ccccc1') > 1",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "tpsa_threshold",
@@ -309,56 +294,38 @@ _CHEM_CATALOG = Catalog(
                         "Is the topological polar surface area (TPSA) of aspirin (SMILES "
                         "CC(=O)OC1=CC=CC=C1C(=O)O) greater than 50 square angstroms? Return a boolean."
                     ),
-                    "reference_sql": "SELECT chem.main.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O') > 50",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "heavy_atom_count",
                     "prompt": "How many heavy (non-hydrogen) atoms does benzene (SMILES c1ccccc1) have?",
-                    "reference_sql": "SELECT chem.main.num_atoms('c1ccccc1')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "ring_count",
                     "prompt": ("How many rings does caffeine (SMILES CN1C=NC2=C1C(=O)N(C(=O)N2C)C) have?"),
-                    "reference_sql": "SELECT chem.main.num_rings('CN1C=NC2=C1C(=O)N(C(=O)N2C)C')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "rotatable_bond_count",
                     "prompt": ("How many rotatable bonds does ibuprofen (SMILES CC(C)Cc1ccc(cc1)C(C)C(=O)O) have?"),
-                    "reference_sql": "SELECT chem.main.num_rotatable_bonds('CC(C)Cc1ccc(cc1)C(C)C(=O)O')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "h_bond_donors",
                     "prompt": ("How many hydrogen-bond donors does glucose (SMILES OCC1OC(O)C(O)C(O)C1O) have?"),
-                    "reference_sql": "SELECT chem.main.num_h_donors('OCC1OC(O)C(O)C(O)C1O')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "h_bond_acceptors",
                     "prompt": (
                         "How many hydrogen-bond acceptors does caffeine (SMILES CN1C=NC2=C1C(=O)N(C(=O)N2C)C) have?"
                     ),
-                    "reference_sql": "SELECT chem.main.num_h_acceptors('CN1C=NC2=C1C(=O)N(C(=O)N2C)C')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "morgan_fingerprint_stable",
                     "prompt": (
                         "Do two copies of ethanol (SMILES CCO) produce the same Morgan fingerprint? Return a boolean."
                     ),
-                    "reference_sql": (
-                        "SELECT chem.main.morgan_fingerprint('CCO') = chem.main.morgan_fingerprint('CCO')"
-                    ),
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "tanimoto_self_similarity",
                     "prompt": "What is the Tanimoto similarity between ethanol (SMILES CCO) and itself?",
-                    "reference_sql": "SELECT chem.main.tanimoto('CCO', 'CCO')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "substructure_search",
@@ -366,8 +333,6 @@ _CHEM_CATALOG = Catalog(
                         "Does phenol (SMILES c1ccccc1O) contain a benzene ring, "
                         "expressed as the SMARTS pattern c1ccccc1? Return a boolean."
                     ),
-                    "reference_sql": "SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "lipinski_drug_like",
@@ -375,8 +340,6 @@ _CHEM_CATALOG = Catalog(
                         "Does aspirin (SMILES CC(=O)OC1=CC=CC=C1C(=O)O) satisfy all four "
                         "Lipinski rule-of-five criteria? Return a single boolean."
                     ),
-                    "reference_sql": ("SELECT bool_and(passes) FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O')"),
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "drug_like_predicate",
@@ -384,16 +347,12 @@ _CHEM_CATALOG = Catalog(
                         "Using a single scalar drug-likeness predicate, is aspirin (SMILES "
                         "CC(=O)OC1=CC=CC=C1C(=O)O) drug-like? Return a boolean."
                     ),
-                    "reference_sql": "SELECT chem.main.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O')",
-                    "ignore_column_names": True,
                 },
                 {
                     "name": "browse_example_molecules",
                     "prompt": (
                         "How many molecules are listed in the worker's built-in example molecule reference table?"
                     ),
-                    "reference_sql": "SELECT count(*) FROM chem.main.example_molecules()",
-                    "ignore_column_names": True,
                 },
             ]
         ),
@@ -401,7 +360,7 @@ _CHEM_CATALOG = Catalog(
     source_url="https://github.com/Query-farm/vgi-chem",
     schemas=[
         Schema(
-            name="main",
+            path=["main"],
             comment="RDKit cheminformatics for SQL: descriptors, fingerprints, substructure, InChI.",
             tags={
                 "vgi.title": "Chem — main",

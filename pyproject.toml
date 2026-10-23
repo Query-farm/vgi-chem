@@ -33,7 +33,7 @@ classifiers = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "vgi-python>=0.30.0",
+    "vgi-python>=0.46.1",
     "rdkit>=2024.3",
     "pyarrow",
 ]
@@ -43,19 +43,20 @@ dependencies = [
 # in addition to stdio. That path needs vgi-python's `http` extra (waitress).
 # CI's http transport leg installs this via `uv sync --extra http`.
 http = [
-    "vgi-python[http]>=0.30.0",
+    "vgi-python[http]>=0.46.1",
 ]
 # HTTP-serving extra installed by the Docker image (`pip install '.[serve]'`):
 # same waitress-backed vgi-python[http] as `http`, named `serve` to match the
 # shared docker-publish convention (vgi-llm / vgi-etf-schwab).
 serve = [
-    "vgi-python[http]>=0.30.0",
+    "vgi-python[http]>=0.46.1",
 ]
 dev = [
     "pytest>=8",
     "ruff",
     "mypy",
     "pydoclint",
+    "pyarrow-stubs",
 ]
 
 
