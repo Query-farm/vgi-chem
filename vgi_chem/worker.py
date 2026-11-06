@@ -33,11 +33,32 @@ from __future__ import annotations
 import json
 
 from vgi import Worker
-from vgi.catalog import Catalog, Schema, Table
+from vgi.catalog import Catalog, ConstraintInfo, Schema, Table, constraint_record
 
 from vgi_chem.meta import keywords_json
 from vgi_chem.scalars import SCALAR_FUNCTIONS
 from vgi_chem.tables import TABLE_FUNCTIONS, ExampleMoleculesFunction
+
+
+def _trusted(table: str, constraint_id: str, kind: str, columns: list[list[str]]) -> ConstraintInfo:
+    """Build an ENFORCED/ALL_ROWS constraint record for a table in the ``main`` schema.
+
+    DuckDB only reads trusted (ENFORCED + ALL_ROWS) records under vgi.v3; declare one
+    only when every row the table can return satisfies it.
+
+    Args:
+        table: Table name the record belongs to.
+        constraint_id: Identifier unique within the table.
+        kind: Constraint kind (``PRIMARY_KEY``, ``NOT_NULL``, ...).
+        columns: Column paths the constraint covers, e.g. ``[["name"]]``.
+
+    Returns:
+        The canonical constraint record.
+    """
+    return constraint_record(
+        ["main"], table, constraint_id, kind, columns, enforcement="ENFORCED", validation="ALL_ROWS"
+    )
+
 
 _FUNCTIONS: list[type] = [
     *SCALAR_FUNCTIONS,
@@ -55,8 +76,11 @@ _DISCOVERY_TABLES: list[Table] = [
         name="example_molecules",
         function=ExampleMoleculesFunction,
         comment="Curated registry of well-known molecules with pre-computed descriptors (discovery table).",
-        primary_key=(("name",),),
-        not_null=("name", "smiles", "formula"),
+        constraints=(
+            _trusted("example_molecules", "pk", "PRIMARY_KEY", [["name"]]),
+            _trusted("example_molecules", "smiles_not_null", "NOT_NULL", [["smiles"]]),
+            _trusted("example_molecules", "formula_not_null", "NOT_NULL", [["formula"]]),
+        ),
         column_comments={
             "name": "Common name of the molecule.",
             "smiles": "SMILES string you can pass to any chem function.",
