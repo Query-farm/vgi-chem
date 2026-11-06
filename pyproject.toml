@@ -1,6 +1,6 @@
 [project]
 name = "vgi-chem"
-version = "0.1.0"
+version = "0.2.0"
 description = "Cheminformatics (descriptors, fingerprints, substructure, InChI) for DuckDB via VGI + RDKit"
 readme = "README.md"
 keywords = [
