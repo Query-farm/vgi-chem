@@ -18,7 +18,7 @@ open-source cheminformatics toolkit.
 
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
-ATTACH 'chem' (TYPE vgi, LOCATION 'uv run chem_worker.py');
+ATTACH 'chem' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.2.0 vgi-chem-worker');
 
 SELECT chem.is_valid_smiles('CCO');                              -- true
 SELECT chem.canonical_smiles('OCC');                             -- 'CCO'
@@ -33,6 +33,39 @@ SELECT * FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');         -- rule-of-five
 
 Everything runs **offline and deterministically** — RDKit computes locally with
 no network calls, so the same input always gives the same answer.
+
+## Quick start
+
+The worker isn't on PyPI; [uv](https://docs.astral.sh/uv/) runs it straight from a tagged release on GitHub. `uvx` builds an isolated environment on the first ATTACH and reuses it afterwards:
+
+```sql
+INSTALL vgi FROM community;
+LOAD vgi;
+
+ATTACH 'chem' AS chem (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.2.0 vgi-chem-worker');
+
+-- Molecular formula of aspirin.
+SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O') AS formula;
+
+-- Tanimoto self-similarity is exactly 1.0.
+SELECT chem.main.tanimoto('CCO', 'CCO') AS sim;
+```
+
+Change `@v0.2.0` to move to a newer release.
+
+### Other ways to run it
+
+- **Docker** (the image bundles the worker and its dependencies):
+
+  ```sql
+  ATTACH 'chem' AS chem (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-chem:0.2.0');
+  ```
+
+- **From a local checkout** (`git clone https://github.com/Query-farm/vgi-chem`), point `LOCATION` at `uv run --project /path/to/vgi-chem vgi-chem-worker`.
+
+### Build from source
+
+To build the worker yourself, see [Local development](#local-development).
 
 ## Positioning vs. `ducksmiles`
 
