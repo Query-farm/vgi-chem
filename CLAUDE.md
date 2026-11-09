@@ -111,7 +111,7 @@ uv run ruff check . && uv run mypy vgi_chem/
 
 `make test-sql` sets `VGI_CHEM_WORKER="uv run --python 3.13 chem_worker.py"`, puts
 `~/.local/bin` on PATH, and runs `haybarn-unittest --keep-home --test-dir . "test/sql/*"`.
-Install the runner once with `uv tool install --prerelease allow 'haybarn-unittest>=2.0.0rc11,<2.1'` (haybarn 2.0 is required for the worker's VGI protocol vgi.v3 / 3.1). Each `.test` uses
+Install the runner once with `uv tool install --prerelease allow 'haybarn-unittest>=2.0.0rc11,<2.1'` (haybarn 2.0 is required for the worker's VGI protocol vgi.v3 / 3.2). Each `.test` uses
 an explicit `statement ok` / `LOAD vgi;` (haybarn **silently skips** `require vgi`)
 then `ATTACH 'chem' ... (TYPE vgi, LOCATION '${VGI_CHEM_WORKER}')` and
 catalog-qualifies every call (`chem.<fn>`). CI (`.github/workflows/ci.yml`) runs
