@@ -159,7 +159,11 @@ _CHEM_CATALOG = Catalog(
     default_schema="main",
     comment="RDKit cheminformatics for SQL: molecular descriptors, fingerprints, substructure, InChI.",
     tags={
-        "vgi.title": "Cheminformatics for SQL (RDKit)",
+        "vgi.title": "RDKit Cheminformatics",
+        "vgi.subtitle": (
+            "Compute molecular descriptors, fingerprints, similarity, substructure matches "
+            "and InChI keys from SMILES strings."
+        ),
         "vgi.keywords": keywords_json(
             [
                 "cheminformatics",
@@ -387,7 +391,7 @@ _CHEM_CATALOG = Catalog(
             path=["main"],
             comment="RDKit cheminformatics for SQL: descriptors, fingerprints, substructure, InChI.",
             tags={
-                "vgi.title": "Chem — main",
+                "vgi.title": "Chemistry Functions",
                 "vgi.keywords": keywords_json(
                     [
                         "cheminformatics",
