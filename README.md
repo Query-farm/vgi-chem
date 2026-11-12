@@ -18,7 +18,7 @@ open-source cheminformatics toolkit.
 
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
-ATTACH 'chem' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.3.0 vgi-chem-worker');
+ATTACH 'chem' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.4.0 vgi-chem-worker');
 
 SELECT chem.is_valid_smiles('CCO');                              -- true
 SELECT chem.canonical_smiles('OCC');                             -- 'CCO'
@@ -42,7 +42,7 @@ The worker isn't on PyPI; [uv](https://docs.astral.sh/uv/) runs it straight from
 INSTALL vgi FROM community;
 LOAD vgi;
 
-ATTACH 'chem' AS chem (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.3.0 vgi-chem-worker');
+ATTACH 'chem' AS chem (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.4.0 vgi-chem-worker');
 
 -- Molecular formula of aspirin.
 SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O') AS formula;
@@ -51,14 +51,14 @@ SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O') AS formula;
 SELECT chem.main.tanimoto('CCO', 'CCO') AS sim;
 ```
 
-Change `@v0.3.0` to move to a newer release.
+Change `@v0.4.0` to move to a newer release.
 
 ### Other ways to run it
 
 - **Docker** (the image bundles the worker and its dependencies):
 
   ```sql
-  ATTACH 'chem' AS chem (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-chem:0.3.0');
+  ATTACH 'chem' AS chem (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-chem:0.4.0');
   ```
 
 - **From a local checkout** (`git clone https://github.com/Query-farm/vgi-chem`), point `LOCATION` at `uv run --project /path/to/vgi-chem vgi-chem-worker`.
@@ -211,7 +211,7 @@ function through the real bind→init→process lifecycle in-process;
 exactly as DuckDB would after `ATTACH`. The `test/sql/*.test` files are DuckDB
 sqllogictest cases run by
 [`haybarn-unittest`](https://pypi.org/project/haybarn-unittest/)
-(`uv tool install --prerelease allow 'haybarn-unittest>=2.0.0rc11,<2.1'`; haybarn 2.0 is required for the worker's VGI protocol vgi.v3 / 3.2) against a real `ATTACH` + `SELECT`.
+(`uv tool install --prerelease allow 'haybarn-unittest>=2.0.0rc11,<2.1'`; haybarn 2.0 is required for the worker's VGI protocol vgi.v3 / 3.3) against a real `ATTACH` + `SELECT`.
 
 ## Layout
 

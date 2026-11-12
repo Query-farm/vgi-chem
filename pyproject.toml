@@ -1,6 +1,6 @@
 [project]
 name = "vgi-chem"
-version = "0.3.0"
+version = "0.4.0"
 description = "Cheminformatics (descriptors, fingerprints, substructure, InChI) for DuckDB via VGI + RDKit"
 readme = "README.md"
 keywords = [
@@ -33,7 +33,7 @@ classifiers = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "vgi-python>=0.50.0",
+    "vgi-python>=0.51.0",
     "rdkit>=2024.3",
     "pyarrow",
 ]
@@ -43,13 +43,13 @@ dependencies = [
 # in addition to stdio. That path needs vgi-python's `http` extra (waitress).
 # CI's http transport leg installs this via `uv sync --extra http`.
 http = [
-    "vgi-python[http]>=0.50.0",
+    "vgi-python[http]>=0.51.0",
 ]
 # HTTP-serving extra installed by the Docker image (`pip install '.[serve]'`):
 # same waitress-backed vgi-python[http] as `http`, named `serve` to match the
 # shared docker-publish convention (vgi-llm / vgi-etf-schwab).
 serve = [
-    "vgi-python[http]>=0.50.0",
+    "vgi-python[http]>=0.51.0",
 ]
 dev = [
     "pytest>=8",
