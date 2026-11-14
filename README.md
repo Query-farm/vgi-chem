@@ -34,6 +34,12 @@ SELECT * FROM chem.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O');         -- rule-of-five
 Everything runs **offline and deterministically** — RDKit computes locally with
 no network calls, so the same input always gives the same answer.
 
+## Executable notebooks
+
+[Similarity depends on the fingerprint](notebooks/README.md) uses visible Haybarn
+SQL to compare Morgan/Tanimoto scores, inspect SMARTS matches and verify bit-set
+accounting. Includes two charts, saved outputs and a locked notebook environment.
+
 ## Quick start
 
 The worker isn't on PyPI; [uv](https://docs.astral.sh/uv/) runs it straight from a tagged release on GitHub. `uvx` builds an isolated environment on the first ATTACH and reuses it afterwards:
