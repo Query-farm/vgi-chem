@@ -44,6 +44,14 @@ from vgi.metadata import FunctionExample
 from vgi.scalar_function import ScalarFunction
 
 from . import chem
+from .examples import (
+    ACID_FILTER_DESCRIPTION,
+    ACID_FILTER_SQL,
+    INCHIKEY_LOOKUP_DESCRIPTION,
+    INCHIKEY_LOOKUP_SQL,
+    SIMILARITY_SEARCH_DESCRIPTION,
+    SIMILARITY_SEARCH_SQL,
+)
 from .meta import attach_example_queries, object_tags
 
 _SRC = "vgi_chem/scalars.py"
@@ -390,6 +398,10 @@ class InchiKeyFunction(ScalarFunction):
             FunctionExample(
                 sql="SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')",
                 description="InChIKey of aspirin -> 'BSYNRYMUTXBXSQ-UHFFFAOYSA-N'",
+            ),
+            FunctionExample(
+                sql=INCHIKEY_LOOKUP_SQL,
+                description=INCHIKEY_LOOKUP_DESCRIPTION,
             ),
         ]
 
@@ -1086,6 +1098,10 @@ class TanimotoFunction(ScalarFunction):
                 sql="SELECT chem.main.tanimoto('CCO', 'CCO')",
                 description="Self-similarity is 1.0",
             ),
+            FunctionExample(
+                sql=SIMILARITY_SEARCH_SQL,
+                description=SIMILARITY_SEARCH_DESCRIPTION,
+            ),
         ]
 
     @classmethod
@@ -1229,6 +1245,10 @@ class SubstructureMatchFunction(ScalarFunction):
             FunctionExample(
                 sql="SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1')",
                 description="Phenol contains a benzene ring -> true",
+            ),
+            FunctionExample(
+                sql=ACID_FILTER_SQL,
+                description=ACID_FILTER_DESCRIPTION,
             ),
         ]
 

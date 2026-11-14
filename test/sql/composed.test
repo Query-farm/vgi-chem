@@ -1,0 +1,57 @@
+# name: test/sql/composed.test
+# description: Composed example queries (registry table + scalars) published in the catalog metadata
+# group: [vgi_chem]
+
+require-env VGI_CHEM_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'chem' AS chem (TYPE vgi, LOCATION '{VGI_CHEM_WORKER}');
+
+# SIMILARITY_SEARCH_SQL
+query TR
+SELECT name, round(chem.main.tanimoto(smiles, 'OC(=O)c1ccccc1O'), 3) AS similarity FROM chem.main.example_molecules ORDER BY similarity DESC, name LIMIT 3
+----
+aspirin	0.448
+phenol	0.381
+paracetamol	0.226
+
+# ACID_FILTER_SQL
+query TTR
+SELECT name, formula, round(mol_weight, 2) AS mol_weight FROM chem.main.example_molecules WHERE chem.main.substructure_match(smiles, '[CX3](=O)[OX2H1]') ORDER BY mol_weight
+----
+acetic acid	C2H4O2	60.05
+aspirin	C9H8O4	180.16
+ibuprofen	C13H18O2	206.28
+penicillin g	C16H18N2O4S	334.4
+
+# INCHIKEY_LOOKUP_SQL
+query TT
+SELECT q.smiles AS query_smiles, m.name FROM (VALUES ('OC(=O)C'), ('C(O)C'), ('Oc1ccccc1'), ('NCCO')) AS q(smiles) LEFT JOIN chem.main.example_molecules AS m ON chem.main.inchikey(q.smiles) = chem.main.inchikey(m.smiles) ORDER BY query_smiles
+----
+C(O)C	ethanol
+NCCO	NULL
+OC(=O)C	acetic acid
+Oc1ccccc1	phenol
+
+# NEAREST_PAIRS_SQL
+query TTR
+SELECT a.name AS molecule_a, b.name AS molecule_b, round(chem.main.tanimoto(a.smiles, b.smiles), 3) AS similarity FROM chem.main.example_molecules AS a JOIN chem.main.example_molecules AS b ON a.name < b.name ORDER BY similarity DESC, molecule_a, molecule_b LIMIT 3
+----
+paracetamol	phenol	0.292
+benzene	phenol	0.273
+aspirin	phenol	0.25
+
+# Agent task similar_to_isobutylbenzene grader
+query T
+SELECT name FROM chem.main.example_molecules ORDER BY chem.main.tanimoto(smiles, 'CC(C)Cc1ccccc1') DESC LIMIT 1
+----
+ibuprofen
+
+# Agent task aromatic_carboxylic_acids grader
+query I
+SELECT count(*) FROM chem.main.example_molecules WHERE chem.main.substructure_match(smiles, 'c1ccccc1') AND chem.main.substructure_match(smiles, '[CX3](=O)[OX2H1]')
+----
+3

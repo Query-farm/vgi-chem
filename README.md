@@ -150,6 +150,16 @@ bit-string (`nbits / 4` hex chars; defaults `radius=2`, `nbits=2048`); the
 Morgan/Tanimoto similarity in `[0, 1]` (self-similarity is exactly `1.0`); the
 `(a, b, radius)` overload sets the Morgan radius.
 
+Combine `tanimoto` with the `example_molecules` registry for a similarity search
+— rank every registry molecule against a query structure (here salicylic acid):
+
+```sql
+SELECT name, round(chem.main.tanimoto(smiles, 'OC(=O)c1ccccc1O'), 3) AS similarity
+FROM chem.main.example_molecules
+ORDER BY similarity DESC, name
+LIMIT 3;   -- aspirin 0.448, phenol 0.381, paracetamol 0.226
+```
+
 ### Substructure
 
 `substructure_match(smiles, smarts)` is `true` when the molecule contains the

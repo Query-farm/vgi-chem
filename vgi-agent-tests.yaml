@@ -62,3 +62,9 @@ tasks:
   - name: browse_example_molecules
     reference_sql: "SELECT count(*) FROM chem.main.example_molecules()"
     ignore_column_names: true
+  - name: similar_to_isobutylbenzene
+    reference_sql: "SELECT name FROM chem.main.example_molecules ORDER BY chem.main.tanimoto(smiles, 'CC(C)Cc1ccccc1') DESC LIMIT 1"
+    ignore_column_names: true
+  - name: aromatic_carboxylic_acids
+    reference_sql: "SELECT count(*) FROM chem.main.example_molecules WHERE chem.main.substructure_match(smiles, 'c1ccccc1') AND chem.main.substructure_match(smiles, '[CX3](=O)[OX2H1]')"
+    ignore_column_names: true

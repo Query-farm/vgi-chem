@@ -35,6 +35,13 @@ import json
 from vgi import Worker
 from vgi.catalog import Catalog, ConstraintInfo, Schema, Table, constraint_record
 
+from vgi_chem.examples import (
+    COMPOSED_EXAMPLES,
+    NEAREST_PAIRS_DESCRIPTION,
+    NEAREST_PAIRS_SQL,
+    SIMILARITY_SEARCH_DESCRIPTION,
+    SIMILARITY_SEARCH_SQL,
+)
 from vgi_chem.meta import keywords_json
 from vgi_chem.scalars import SCALAR_FUNCTIONS
 from vgi_chem.tables import TABLE_FUNCTIONS, ExampleMoleculesFunction
@@ -148,6 +155,7 @@ _DISCOVERY_TABLES: list[Table] = [
                         "description": "How many example molecules are drug-like (pass all four Lipinski rules)?",
                         "sql": "SELECT count(*) AS drug_like FROM chem.main.example_molecules WHERE drug_like",
                     },
+                    {"description": NEAREST_PAIRS_DESCRIPTION, "sql": NEAREST_PAIRS_SQL},
                 ]
             ),
         },
@@ -260,6 +268,11 @@ _CHEM_CATALOG = Catalog(
                 {
                     "description": "Browse the built-in example molecules by molecular weight.",
                     "sql": ("SELECT name, formula FROM chem.main.example_molecules() ORDER BY mol_weight LIMIT 3"),
+                },
+                {
+                    "description": SIMILARITY_SEARCH_DESCRIPTION,
+                    "sql": SIMILARITY_SEARCH_SQL,
+                    "expected_result": [["aspirin", 0.448], ["phenol", 0.381], ["paracetamol", 0.226]],
                 },
             ]
         ),
@@ -374,6 +387,23 @@ _CHEM_CATALOG = Catalog(
                     "prompt": (
                         "Using a single scalar drug-likeness predicate, is aspirin (SMILES "
                         "CC(=O)OC1=CC=CC=C1C(=O)O) drug-like? Return a boolean."
+                    ),
+                },
+                {
+                    "name": "similar_to_isobutylbenzene",
+                    "prompt": (
+                        "Which molecule in the worker's built-in example molecule registry is most "
+                        "structurally similar to isobutylbenzene (SMILES CC(C)Cc1ccccc1), measured by "
+                        "Tanimoto similarity on default Morgan fingerprints? Return one row with a "
+                        "single VARCHAR column holding the molecule's name as listed in the registry."
+                    ),
+                },
+                {
+                    "name": "aromatic_carboxylic_acids",
+                    "prompt": (
+                        "How many molecules in the worker's built-in example molecule registry contain "
+                        "both a benzene ring (SMARTS c1ccccc1) and a carboxylic-acid group (SMARTS "
+                        "[CX3](=O)[OX2H1])? Return a single integer count."
                     ),
                 },
                 {
@@ -510,6 +540,8 @@ _CHEM_CATALOG = Catalog(
                                 "FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O') ORDER BY rule"
                             ),
                         },
+                        # Composed: the registry table combined with the scalars.
+                        *COMPOSED_EXAMPLES,
                     ]
                 ),
                 "vgi.doc_llm": (
