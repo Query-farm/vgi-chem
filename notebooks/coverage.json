@@ -1,0 +1,379 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-released.json",
+      "sha256": "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "catalog_sha256": "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+        "notes": "Complete native function/table/view exports through actual Haybarn attachments, reconciled with SCALAR_FUNCTIONS, TABLE_FUNCTIONS and catalog discovery tables. Twenty public logical names, with overloads and example_molecules relation/function alias counted once; no exclusions. Released tag versus current main changes only composed metadata examples in the selected scalar/worker code; vgi_chem/chem.py analytical implementations are unchanged. Current catalog uses the existing installed source environment without rebuild. Notebook execution uses the released worker and fresh resolver dependencies recorded in README."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "catalog_sha256": "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95",
+        "notes": "Complete native function/table/view exports through actual Haybarn attachments, reconciled with SCALAR_FUNCTIONS, TABLE_FUNCTIONS and catalog discovery tables. Twenty public logical names, with overloads and example_molecules relation/function alias counted once; no exclusions. Released tag versus current main changes only composed metadata examples in the selected scalar/worker code; vgi_chem/chem.py analytical implementations are unchanged. Current catalog uses the existing installed source environment without rebuild. Notebook execution uses the released worker and fresh resolver dependencies recorded in README."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "ab867dd9dfa3040dc37daa8d25538565f3cad4f3387d372b4ae74ac847a67816"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "is_valid_smiles"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "bd7496fb",
+          "reference": "chem.main.is_valid_smiles"
+        }
+      ],
+      "narrative_cells": [
+        "aac66aac"
+      ],
+      "result_cells": [
+        "bd7496fb"
+      ],
+      "interpretation_cells": [
+        "7d637239"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Separate invalid, missing and usable inputs before similarity search.",
+        "finding": "Twelve input records yield nine valid strings and eight canonical structures. Empty/malformed strings remain invalid and NULL input keeps missing validity; unusable records never become zero-score candidates."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "canonical_smiles"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "bd7496fb",
+          "reference": "chem.main.canonical_smiles"
+        }
+      ],
+      "narrative_cells": [
+        "15f09511"
+      ],
+      "result_cells": [
+        "7d637239"
+      ],
+      "interpretation_cells": [
+        "7d637239"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Avoid double-counting alternate representations in the candidate population.",
+        "finding": "The phenol alias groups into one canonical structure while preserving both source labels. Canonical SMILES is used for this defined structure preparation; no added salt, protonation or tautomer normalization is implied."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "mol_formula"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "645f5c53",
+          "reference": "chem.main.mol_formula"
+        }
+      ],
+      "narrative_cells": [
+        "15f09511"
+      ],
+      "result_cells": [
+        "descriptor-finding"
+      ],
+      "interpretation_cells": [
+        "descriptor-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Use molecular composition to distinguish structures with matching coarse feature counts.",
+        "finding": "Phenol and cyclohexanol both have one ring and one RDKit H-donor, but C6H6O versus C6H12O exposes different hydrogen content. Formula alone is not a unique structure identity."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "mol_weight"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "645f5c53",
+          "reference": "chem.main.mol_weight"
+        }
+      ],
+      "narrative_cells": [
+        "15f09511"
+      ],
+      "result_cells": [
+        "descriptor-finding"
+      ],
+      "interpretation_cells": [
+        "descriptor-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Inspect average molecular mass in g/mol alongside formula rather than treating a fingerprint score as complete molecular information.",
+        "finding": "The pair table shows different average molecular weights despite matching ring/donor counts, while all eight library descriptors remain fixed across the radius experiment."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "tpsa"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "645f5c53",
+          "reference": "chem.main.tpsa"
+        }
+      ],
+      "narrative_cells": [
+        "15f09511"
+      ],
+      "result_cells": [
+        "descriptor-finding"
+      ],
+      "interpretation_cells": [
+        "descriptor-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Compare topological polar surface area with motif specificity.",
+        "finding": "Phenol and cyclohexanol both return 20.23 square angstroms in this release. Equal TPSA does not establish the aromatic-OH motif; their SMARTS answers differ."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "num_rings"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "645f5c53",
+          "reference": "chem.main.num_rings"
+        }
+      ],
+      "narrative_cells": [
+        "descriptor-question"
+      ],
+      "result_cells": [
+        "descriptor-finding"
+      ],
+      "interpretation_cells": [
+        "descriptor-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Test whether ring counts identify the requested aromatic motif.",
+        "finding": "Both selected structures have one ring, but only phenol matches aromatic-OH. This coarse count does not specify aromaticity or connectivity."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "num_h_donors"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "645f5c53",
+          "reference": "chem.main.num_h_donors"
+        }
+      ],
+      "narrative_cells": [
+        "descriptor-question"
+      ],
+      "result_cells": [
+        "descriptor-finding"
+      ],
+      "interpretation_cells": [
+        "descriptor-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Test whether an H-bond donor count locates a specific substructure.",
+        "finding": "Both selected structures have one RDKit H-bond donor, but their motif matches differ. A count describes features without locating their complete connectivity."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "substructure_match"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "645f5c53",
+          "reference": "chem.main.substructure_match"
+        }
+      ],
+      "narrative_cells": [
+        "15f09511"
+      ],
+      "result_cells": [
+        "e5c9f80a"
+      ],
+      "interpretation_cells": [
+        "e5c9f80a"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Keep explicit aromatic-OH substructure filtering distinct from nearest fingerprint neighbors.",
+        "finding": "The fixed SMARTS labels candidate bars and remains unchanged across radii; nearest-neighbor prose compares the score and motif result explicitly. The phenol/cyclohexanol control explains why coarse counts do not answer the motif question; invalid SMARTS returns NULL."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "morgan_fingerprint"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "03f78d8e",
+          "reference": "chem.main.morgan_fingerprint"
+        }
+      ],
+      "narrative_cells": [
+        "32076b99"
+      ],
+      "result_cells": [
+        "03f78d8e"
+      ],
+      "interpretation_cells": [
+        "a6b1a1ac"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Expose the representation used for similarity and measure the effect of changing radius on the same population.",
+        "finding": "Both 2,048-bit radius settings are materialized, checked for width/nonempty bit sets, and compared on identical eight-structure grids. Four of seven candidate ranks change between radii in this library; the example does not choose a universally superior radius."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "tanimoto"
+      },
+      "notebook": "01_similarity_depends_on_the_fingerprint.ipynb",
+      "sql": [
+        {
+          "cell": "03f78d8e",
+          "reference": "chem.main.tanimoto"
+        }
+      ],
+      "narrative_cells": [
+        "32076b99"
+      ],
+      "result_cells": [
+        "03f78d8e"
+      ],
+      "interpretation_cells": [
+        "2a8b2cff"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T20:13:13.602291+00:00",
+        "notebook_sha256": "7c7cb8b4f533d97414e103eeaaf764ef4e713590410aea2fb895d044274ec2c1",
+        "catalog_sha256": [
+          "d443ffba8c9e6fce08303e5e92e4952d93261df8a498cc6eab418271e2cea107",
+          "0daa94f0bc81cbbb3cf9e1843e0f5e7a27a32fb58ee024bfd0fd59d974da0d95"
+        ],
+        "purpose": "Verify worker similarity against an independent SQL accounting of returned fingerprint bits before ranking.",
+        "finding": "All 128 ordered pair scores match intersection/union bit counts within tolerance. Scores are bounded and symmetric, diagonal self-similarity is one, and phenol self-match is removed from the seven-candidate ranking."
+      }
+    }
+  ]
+}

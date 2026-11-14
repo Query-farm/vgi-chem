@@ -1,0 +1,902 @@
+{
+  "query": "SELECT * FROM duckdb_functions() WHERE database_name='chem' ORDER BY schema_name,function_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "function_name",
+    "alias_of",
+    "function_type",
+    "description",
+    "comment",
+    "tags",
+    "return_type",
+    "parameters",
+    "parameter_types",
+    "varargs",
+    "macro_definition",
+    "has_side_effects",
+    "internal",
+    "extension_name",
+    "function_oid",
+    "examples",
+    "stability",
+    "categories"
+  ],
+  "rows": [
+    [
+      "chem",
+      "22592",
+      "main",
+      "canonical_smiles",
+      null,
+      "scalar",
+      "RDKit canonical SMILES form, or NULL if the input is invalid",
+      null,
+      {
+        "vgi.category": "identity",
+        "vgi.doc_llm": "## canonical_smiles\n\nRewrites any valid SMILES into RDKit's **canonical** SMILES -- a single, deterministic spelling for a given molecular graph.\n\n**Use it** to deduplicate or group molecules that were written differently (`OCC` and `CCO` are the same ethanol), or to produce a stable join key.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `VARCHAR` canonical SMILES, or `NULL` if the input does not parse.\n\n**Edge cases**: `NULL`/invalid input returns `NULL`. Canonicalization does not neutralize charges or strip salts -- it only canonicalizes the graph as written.",
+        "vgi.doc_md": "# canonical_smiles\n\nNormalize a SMILES string to RDKit's canonical form for stable comparison and deduplication.\n\n## Usage\n\n```sql\nSELECT chem.main.canonical_smiles('OCC');   -- 'CCO'\n```\n\nApply it over a whole SMILES column with a `DISTINCT` projection to deduplicate structures written different ways.\n\n## Notes\n\nReturns `NULL` on invalid input. Two strings denoting the same molecule canonicalize to the same value, making this a reliable grouping/join key.",
+        "vgi.example_queries": "[{\"description\": \"Canonicalize ethanol -> 'CCO'\", \"sql\": \"SELECT chem.main.canonical_smiles('OCC')\"}]",
+        "vgi.keywords": "[\"smiles\", \"canonical\", \"canonicalize\", \"normalize\", \"dedupe\", \"deduplicate\", \"identity\", \"rdkit\"]",
+        "vgi.title": "Canonical SMILES Form"
+      },
+      "VARCHAR",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22596,
+      [
+        "SELECT chem.main.canonical_smiles('OCC')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "identity"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "drug_like",
+      null,
+      "scalar",
+      "True if the molecule passes all four Lipinski rule-of-five criteria, NULL if invalid",
+      null,
+      {
+        "vgi.category": "druglikeness",
+        "vgi.doc_llm": "## drug_like\n\nA single-value **drug-likeness predicate**: `true` if the molecule (given as SMILES) passes **all four** Lipinski rule-of-five criteria, `false` if it violates any of them.\n\n**Use it** to filter compound libraries inline -- `WHERE drug_like(smiles)` -- instead of aggregating the per-rule `lipinski` table function in a subquery. Reach for `lipinski` instead when you need to see *which* rule a compound violates.\n\nRules applied: molecular weight <= 500, Crippen logP <= 5, H-bond donors <= 5, H-bond acceptors <= 10.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `BOOLEAN` -- `true` if all four rules pass, else `false`; `NULL` for `NULL` or invalid input.\n\n**Edge cases**: this is the scalar collapse of `bool_and(passes)` over `lipinski`; `NULL`/invalid input returns `NULL` (not `false`).",
+        "vgi.doc_md": "# drug_like\n\nBoolean Lipinski rule-of-five drug-likeness flag from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O');  -- true (aspirin)\n```\n\nUse it directly in a `WHERE` clause to keep only drug-like compounds; use the `lipinski` table function when you need the per-rule breakdown.\n\n## Notes\n\nPasses when MW <= 500, logP <= 5, HBD <= 5 and HBA <= 10. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Aspirin passes all four Lipinski rules -> true\", \"sql\": \"SELECT chem.main.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O')\"}]",
+        "vgi.keywords": "[\"drug-like\", \"druglikeness\", \"lipinski\", \"rule of five\", \"ro5\", \"screening\", \"filter\", \"predicate\"]",
+        "vgi.title": "Lipinski Drug-Likeness Flag"
+      },
+      "BOOLEAN",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22597,
+      [
+        "SELECT chem.main.drug_like('CC(=O)OC1=CC=CC=C1C(=O)O')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "druglikeness"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "exact_mass",
+      null,
+      "scalar",
+      "Monoisotopic (exact) mass, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## exact_mass\n\nComputes the **monoisotopic (exact) mass** of a molecule from its SMILES -- the sum of the masses of the most abundant isotope of each atom.\n\n**Use it** for mass-spectrometry workflows, where the exact mass (not the average MW) is what an instrument measures.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `DOUBLE` monoisotopic mass in Daltons, or `NULL` if invalid.\n\n**Edge cases**: differs from `mol_weight`, which averages over natural isotope abundances. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# exact_mass\n\nMonoisotopic exact mass (Da) from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.exact_mass('CCO');  -- ~46.0419\n```\n\n## Notes\n\nUses the most-abundant isotope per element; contrast with `mol_weight` (average). Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Exact mass of ethanol\", \"sql\": \"SELECT chem.main.exact_mass('CCO')\"}]",
+        "vgi.keywords": "[\"exact mass\", \"monoisotopic\", \"mass spec\", \"da\", \"dalton\", \"m/z\", \"descriptor\", \"isotope\"]",
+        "vgi.title": "Monoisotopic Exact Mass"
+      },
+      "DOUBLE",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22598,
+      [
+        "SELECT chem.main.exact_mass('CCO')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "example_molecules",
+      null,
+      "table",
+      "Curated registry of well-known molecules with pre-computed descriptors (no arguments)",
+      null,
+      {
+        "vgi.category": "reference",
+        "vgi.doc_llm": "## example_molecules()\n\nA **no-argument table function** returning a small curated set of well-known molecules (water, ethanol, benzene, aspirin, caffeine, ibuprofen, glucose, paracetamol, nicotine, penicillin G, ...) with ready-computed descriptors.\n\n**Use it** as the browsable entry point to this catalog: scan it to obtain valid SMILES strings to feed the scalar functions, or to compare descriptor ranges across common drugs without computing anything yourself.\n\nColumns: `name`, `smiles`, `formula`, `mol_weight` (g/mol), `logp`, `tpsa` (Angstrom^2), `h_bond_donors`, `h_bond_acceptors`, `num_rings`, and `drug_like` (passes all four Lipinski rules). Every column is derived from the `smiles` via this catalog's own functions.",
+        "vgi.doc_md": "# example_molecules\n\nA curated, browsable registry of common molecules and their descriptors -- the zero-argument discovery entry point for the `chem` catalog.\n\n## Columns\n\n- `name`, `smiles`, `formula`\n- `mol_weight` (g/mol), `logp`, `tpsa` (Angstrom^2)\n- `h_bond_donors`, `h_bond_acceptors`, `num_rings`\n- `drug_like` -- passes all four Lipinski rules\n\nEvery descriptor column is computed live from `smiles` via this catalog's own functions, so the registry can never drift from them.",
+        "vgi.example_queries": "[{\"description\": \"Browse the built-in molecules by molecular weight\", \"sql\": \"SELECT name, smiles, formula, mol_weight FROM chem.main.example_molecules() ORDER BY mol_weight\"}, {\"description\": \"Drug-like example molecules ranked by lipophilicity\", \"sql\": \"SELECT name, logp FROM chem.main.example_molecules() WHERE drug_like ORDER BY logp DESC\"}]",
+        "vgi.keywords": "[\"example\", \"molecules\", \"registry\", \"reference\", \"discovery\", \"smiles\", \"sample\", \"drug-like\", \"browse\", \"catalog\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"name\", \"type\": \"VARCHAR\", \"description\": \"Common name of the molecule.\"}, {\"name\": \"smiles\", \"type\": \"VARCHAR\", \"description\": \"SMILES string you can pass to any chem function.\"}, {\"name\": \"formula\", \"type\": \"VARCHAR\", \"description\": \"Hill-system molecular formula.\"}, {\"name\": \"mol_weight\", \"type\": \"DOUBLE\", \"description\": \"Average molecular weight in g/mol.\"}, {\"name\": \"logp\", \"type\": \"DOUBLE\", \"description\": \"Crippen logP (octanol-water partition estimate).\"}, {\"name\": \"tpsa\", \"type\": \"DOUBLE\", \"description\": \"Topological polar surface area (Angstrom^2).\"}, {\"name\": \"h_bond_donors\", \"type\": \"INTEGER\", \"description\": \"Lipinski H-bond donor count.\"}, {\"name\": \"h_bond_acceptors\", \"type\": \"INTEGER\", \"description\": \"Lipinski H-bond acceptor count.\"}, {\"name\": \"num_rings\", \"type\": \"INTEGER\", \"description\": \"Ring count (SSSR).\"}, {\"name\": \"drug_like\", \"type\": \"BOOLEAN\", \"description\": \"True if the molecule passes all four Lipinski rules.\"}]",
+        "vgi.title": "Example Molecule Registry"
+      },
+      null,
+      [],
+      [],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22614,
+      [
+        "SELECT name, smiles, formula, mol_weight FROM chem.main.example_molecules() ORDER BY mol_weight",
+        "SELECT name, logp FROM chem.main.example_molecules() WHERE drug_like ORDER BY logp DESC"
+      ],
+      null,
+      [
+        "chem",
+        "reference"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "inchi",
+      null,
+      "scalar",
+      "Standard InChI string, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "identity",
+        "vgi.doc_llm": "## inchi\n\nDerives the **standard InChI** (IUPAC International Chemical Identifier) string for a molecule from its SMILES.\n\n**Use it** when you need a layered, vendor-neutral structural identifier for cross-database lookup or canonical storage.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `VARCHAR` standard InChI (e.g. `InChI=1S/...`), or `NULL` if invalid.\n\n**Edge cases**: standard InChI normalizes tautomers/stereo per the InChI rules, so it may merge structures a raw SMILES would keep distinct. Use `inchikey` for a fixed-length hash of this value. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# inchi\n\nStandard IUPAC InChI identifier from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.inchi('CCO');  -- 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'\n```\n\n## Notes\n\nStandard InChI applies the IUPAC normalization layers. Pair with `inchikey` for a compact hashed key. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"InChI of ethanol\", \"sql\": \"SELECT chem.main.inchi('CCO')\"}]",
+        "vgi.keywords": "[\"inchi\", \"identifier\", \"iupac\", \"structure key\", \"standard inchi\", \"cross-reference\", \"lookup\"]",
+        "vgi.title": "Standard InChI Identifier"
+      },
+      "VARCHAR",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22599,
+      [
+        "SELECT chem.main.inchi('CCO')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "identity"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "inchikey",
+      null,
+      "scalar",
+      "Standard InChIKey (27-char hashed InChI), or NULL if invalid",
+      null,
+      {
+        "vgi.category": "identity",
+        "vgi.doc_llm": "## inchikey\n\nComputes the **standard InChIKey** -- the fixed-length, 27-character hashed form of the InChI -- for a molecule from its SMILES.\n\n**Use it** as a compact, collision-resistant primary key for chemical structures, ideal for indexing, joining and web search.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `VARCHAR` InChIKey like `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`, or `NULL` if invalid.\n\n**Edge cases**: the key is derived from the standard InChI, so it inherits the same tautomer/stereo normalization. The first 14 chars encode connectivity; the next block encodes stereo/isotope/protonation. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# inchikey\n\nStandard 27-character InChIKey hash from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O');\n-- 'BSYNRYMUTXBXSQ-UHFFFAOYSA-N'\n```\n\n## Notes\n\nA fixed-length, indexable structure key. The first 14 characters capture skeletal connectivity. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"InChIKey of aspirin -> 'BSYNRYMUTXBXSQ-UHFFFAOYSA-N'\", \"sql\": \"SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')\"}]",
+        "vgi.keywords": "[\"inchikey\", \"inchi key\", \"hash\", \"structure key\", \"primary key\", \"identifier\", \"lookup\", \"search\"]",
+        "vgi.title": "Standard InChIKey Hash"
+      },
+      "VARCHAR",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22600,
+      [
+        "SELECT chem.main.inchikey('CC(=O)OC1=CC=CC=C1C(=O)O')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "identity"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "is_valid_smiles",
+      null,
+      "scalar",
+      "True if the SMILES string parses to a valid molecule (false if not, NULL if NULL)",
+      null,
+      {
+        "vgi.category": "validity",
+        "vgi.doc_llm": "## is_valid_smiles\n\nTests whether a string is a syntactically and chemically valid [SMILES](https://en.wikipedia.org/wiki/SMILES) molecule, using RDKit's parser.\n\n**Use it** as a cheap guard before any other `chem` function, or to filter a column of user-supplied structures.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `BOOLEAN` -- `true` if RDKit parses it to a molecule, `false` for any non-NULL string it cannot parse.\n\n**Edge cases**: a `NULL` input returns `NULL` (not `false`); unlike every other function here, an unparseable string returns `false` rather than `NULL`, so it is safe to use directly in a `WHERE` clause.",
+        "vgi.doc_md": "# is_valid_smiles\n\nReturn `true` when a string parses to a valid molecule via RDKit, `false` otherwise.\n\n## Usage\n\n```sql\nSELECT chem.main.is_valid_smiles('CCO');   -- true (ethanol)\nSELECT chem.main.is_valid_smiles('xyz');   -- false\n```\n\n## Notes\n\n`NULL` in yields `NULL` out; any other unparseable input yields `false`, so this is the safe predicate to gate the other descriptor/identity functions.",
+        "vgi.example_queries": "[{\"description\": \"A valid SMILES (ethanol)\", \"sql\": \"SELECT chem.main.is_valid_smiles('CCO')\"}, {\"description\": \"An invalid SMILES -> false\", \"sql\": \"SELECT chem.main.is_valid_smiles('xyz')\"}]",
+        "vgi.keywords": "[\"smiles\", \"valid\", \"validate\", \"validity\", \"parse\", \"check molecule\", \"is valid\", \"sanitize\"]",
+        "vgi.title": "Is Valid SMILES String"
+      },
+      "BOOLEAN",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22601,
+      [
+        "SELECT chem.main.is_valid_smiles('CCO')",
+        "SELECT chem.main.is_valid_smiles('xyz')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "validity"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "lipinski",
+      null,
+      "table",
+      "Lipinski rule-of-five breakdown (MW<=500, logP<=5, HBD<=5, HBA<=10), one row per rule",
+      null,
+      {
+        "vgi.category": "druglikeness",
+        "vgi.doc_llm": "## lipinski\n\nA **set-returning** table function that breaks a molecule (given as SMILES) down against the **Lipinski rule of five**, emitting one row per rule with its computed value and whether the threshold is satisfied.\n\n**Use it** for drug-likeness screening: keep compounds that pass all four rules, or inspect exactly which rule a compound violates.\n\nRules evaluated: molecular weight <= 500, logP <= 5, H-bond donors <= 5, H-bond acceptors <= 10.\n\n- **Input**: one SMILES string (`VARCHAR`) as a positional table argument.\n- **Output**: rows of `(rule VARCHAR, value DOUBLE, passes BOOLEAN)`.\n\n**Edge cases**: an invalid SMILES yields **no rows** (rather than raising), so `bool_and(passes)` over an empty result behaves accordingly. Aggregate with `bool_and(passes)` to get a single drug-like flag.",
+        "vgi.doc_md": "# lipinski\n\nLipinski rule-of-five breakdown for a SMILES string, one row per rule.\n\n## Result\n\nFour rows -- `molecular_weight`, `logp`, `h_bond_donors`, `h_bond_acceptors` -- each with its computed `value` and a `passes` flag. Aggregate the `passes` column with `bool_and` for a single drug-like verdict, or keep the non-passing rows to see which criterion a compound violates.\n\n## Notes\n\nRules: MW <= 500, logP <= 5, HBD <= 5, HBA <= 10. An invalid SMILES returns no rows.",
+        "vgi.example_queries": "[{\"description\": \"Rule-of-five breakdown for aspirin, one row per rule\", \"sql\": \"SELECT rule, value, passes FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O') ORDER BY rule\"}, {\"description\": \"Does aspirin pass all four rules?\", \"sql\": \"SELECT bool_and(passes) AS drug_like FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O')\"}]",
+        "vgi.keywords": "[\"lipinski\", \"rule of five\", \"ro5\", \"druglikeness\", \"drug-like\", \"screening\", \"molecular weight\", \"logp\", \"hbd\", \"hba\", \"filter\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"rule\", \"type\": \"VARCHAR\", \"description\": \"Lipinski rule name: molecular_weight, logp, h_bond_donors, or h_bond_acceptors.\"}, {\"name\": \"value\", \"type\": \"DOUBLE\", \"description\": \"Computed descriptor value for the rule.\"}, {\"name\": \"passes\", \"type\": \"BOOLEAN\", \"description\": \"True if this rule's rule-of-five threshold is satisfied.\"}]",
+        "vgi.title": "Lipinski Rule-of-Five Breakdown"
+      },
+      null,
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22615,
+      [
+        "SELECT rule, value, passes FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O') ORDER BY rule",
+        "SELECT bool_and(passes) AS drug_like FROM chem.main.lipinski('CC(=O)OC1=CC=CC=C1C(=O)O')"
+      ],
+      null,
+      [
+        "chem",
+        "druglikeness"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "logp",
+      null,
+      "scalar",
+      "Crippen MolLogP (octanol-water partition coefficient estimate), or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## logp\n\nEstimates **logP** -- the octanol-water partition coefficient, a lipophilicity measure -- using RDKit's Crippen `MolLogP` contribution model, from a SMILES.\n\n**Use it** for drug-likeness and ADME filtering; logP is the third Lipinski rule (logP <= 5) and a core permeability/solubility proxy.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `DOUBLE` Crippen logP (can be negative for very polar molecules), or `NULL` if invalid.\n\n**Edge cases**: this is a *computed estimate* (Crippen atom contributions), not a measured value, and may differ from experimental logP. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# logp\n\nCrippen-model octanol-water partition coefficient (logP) from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.logp('CCO');  -- small negative/near-zero (hydrophilic)\n```\n\n## Notes\n\nAn estimate from Crippen atom contributions, not an experimental measurement. Higher means more lipophilic. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"logP of ethanol\", \"sql\": \"SELECT chem.main.logp('CCO')\"}]",
+        "vgi.keywords": "[\"logp\", \"crippen\", \"lipophilicity\", \"partition coefficient\", \"octanol water\", \"adme\", \"lipinski\", \"druglikeness\"]",
+        "vgi.title": "Crippen LogP Estimate"
+      },
+      "DOUBLE",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22602,
+      [
+        "SELECT chem.main.logp('CCO')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "mol_formula",
+      null,
+      "scalar",
+      "Hill-system molecular formula, e.g. 'C9H8O4', or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## mol_formula\n\nComputes the **Hill-system molecular formula** of a molecule from its SMILES (carbon first, then hydrogen, then other elements alphabetically), e.g. `C9H8O4` for aspirin.\n\n**Use it** to report or group compounds by composition, or to feed a mass-spec / elemental-analysis pipeline.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `VARCHAR` Hill formula, or `NULL` for invalid input.\n\n**Edge cases**: implicit hydrogens are counted, so the formula reflects the full molecule, not just the heavy-atom skeleton. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# mol_formula\n\nMolecular formula in Hill notation from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O');  -- 'C9H8O4'\n```\n\n## Notes\n\nImplicit hydrogens are included. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Molecular formula of aspirin\", \"sql\": \"SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O')\"}]",
+        "vgi.keywords": "[\"formula\", \"molecular formula\", \"hill\", \"composition\", \"elements\", \"C9H8O4\", \"empirical formula\"]",
+        "vgi.title": "Molecular Formula String"
+      },
+      "VARCHAR",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22603,
+      [
+        "SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "mol_weight",
+      null,
+      "scalar",
+      "Average molecular weight in g/mol, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## mol_weight\n\nComputes the **average molecular weight** (g/mol) of a molecule from its SMILES, using standard atomic weights (isotope-averaged).\n\n**Use it** for stoichiometry, dosing math, molecular-property filters, or as the first Lipinski rule (MW <= 500).\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `DOUBLE` average MW in g/mol (e.g. ~180.16 for aspirin), or `NULL` if invalid.\n\n**Edge cases**: this is the *average* (not monoisotopic) mass -- use `exact_mass` for the monoisotopic value used in mass spectrometry. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# mol_weight\n\nAverage molecular weight in g/mol from a SMILES string.\n\n## Usage\n\n```sql\nSELECT ROUND(chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O'), 2);  -- 180.16\n```\n\n## Notes\n\nIsotope-averaged weight; see `exact_mass` for the monoisotopic mass. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Molecular weight of aspirin (~180.16)\", \"sql\": \"SELECT chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O')\"}]",
+        "vgi.keywords": "[\"molecular weight\", \"mw\", \"mass\", \"g/mol\", \"average mass\", \"lipinski\", \"descriptor\"]",
+        "vgi.title": "Average Molecular Weight"
+      },
+      "DOUBLE",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22604,
+      [
+        "SELECT chem.main.mol_weight('CC(=O)OC1=CC=CC=C1C(=O)O')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "morgan_fingerprint",
+      null,
+      "scalar",
+      "Morgan (ECFP-like) fingerprint as a hex bit-string (defaults radius=2, nbits=2048); NULL if invalid",
+      null,
+      {
+        "vgi.category": "fingerprint",
+        "vgi.doc_llm": "## morgan_fingerprint\n\nBuilds a **Morgan (ECFP-like) circular fingerprint** for a molecule from its SMILES and returns it as a hexadecimal bit-string.\n\nTwo arities share this name:\n\n- `morgan_fingerprint(smiles)` -- uses the fixed defaults `radius=2` and `nbits=2048`.\n- `morgan_fingerprint(smiles, radius, nbits)` -- set the atom-neighborhood `radius` and the bit-vector length `nbits` explicitly.\n\n**Use it** to vectorize molecules for similarity search, clustering, or as machine-learning features. Two molecules' fingerprints are compared with `tanimoto`.\n\n- **Input**: a SMILES string (`VARCHAR`); the three-argument form additionally takes `radius` (`BIGINT`) and `nbits` (`BIGINT`).\n- **Output**: `VARCHAR` hex-encoded bit vector, or `NULL` if invalid.\n\n**Edge cases**: a larger `radius` captures bigger atom environments; a smaller `nbits` increases bit collisions. Only fingerprints built with identical `radius`/`nbits` are comparable. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# morgan_fingerprint\n\nMorgan/ECFP circular fingerprint as a hex bit-string from a SMILES string.\n\n## Signatures\n\n- `morgan_fingerprint(smiles)` -- defaults `radius=2`, `nbits=2048`.\n- `morgan_fingerprint(smiles, radius, nbits)` -- explicit radius and bit length.\n\n## Usage\n\n```sql\nSELECT chem.main.morgan_fingerprint('CCO');            -- radius=2, nbits=2048\nSELECT chem.main.morgan_fingerprint('CCO', 3, 1024);   -- explicit\n```\n\n## Notes\n\nCompare two fingerprints with `tanimoto`. Only fingerprints built with the same `radius`/`nbits` are comparable. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Default Morgan fingerprint of ethanol (radius=2, nbits=2048)\", \"sql\": \"SELECT chem.main.morgan_fingerprint('CCO')\"}, {\"description\": \"Morgan fingerprint with explicit radius=3 and nbits=1024\", \"sql\": \"SELECT chem.main.morgan_fingerprint('CCO', 3, 1024)\"}]",
+        "vgi.executable_examples": "[{\"description\": \"Default Morgan fingerprint of ethanol (radius=2, nbits=2048).\", \"sql\": \"SELECT chem.main.morgan_fingerprint('CCO') AS fp\"}, {\"description\": \"Morgan fingerprint with an explicit radius and bit length.\", \"sql\": \"SELECT chem.main.morgan_fingerprint('CCO', 3, 1024) AS fp\"}]",
+        "vgi.keywords": "[\"morgan fingerprint\", \"ecfp\", \"fingerprint\", \"circular fingerprint\", \"bit vector\", \"radius\", \"nbits\", \"similarity\", \"features\"]",
+        "vgi.title": "Morgan Fingerprint (Hex)"
+      },
+      "VARCHAR",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22605,
+      [
+        "SELECT chem.main.morgan_fingerprint('CCO')",
+        "SELECT chem.main.morgan_fingerprint('CCO', 3, 1024)"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "fingerprint"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "morgan_fingerprint",
+      null,
+      "scalar",
+      "Morgan fingerprint as a hex bit-string with explicit radius and nbits; NULL if invalid",
+      null,
+      {
+        "vgi.category": "fingerprint",
+        "vgi.doc_llm": "## morgan_fingerprint\n\nBuilds a **Morgan (ECFP-like) circular fingerprint** for a molecule from its SMILES and returns it as a hexadecimal bit-string.\n\nTwo arities share this name:\n\n- `morgan_fingerprint(smiles)` -- uses the fixed defaults `radius=2` and `nbits=2048`.\n- `morgan_fingerprint(smiles, radius, nbits)` -- set the atom-neighborhood `radius` and the bit-vector length `nbits` explicitly.\n\n**Use it** to vectorize molecules for similarity search, clustering, or as machine-learning features. Two molecules' fingerprints are compared with `tanimoto`.\n\n- **Input**: a SMILES string (`VARCHAR`); the three-argument form additionally takes `radius` (`BIGINT`) and `nbits` (`BIGINT`).\n- **Output**: `VARCHAR` hex-encoded bit vector, or `NULL` if invalid.\n\n**Edge cases**: a larger `radius` captures bigger atom environments; a smaller `nbits` increases bit collisions. Only fingerprints built with identical `radius`/`nbits` are comparable. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# morgan_fingerprint\n\nMorgan/ECFP circular fingerprint as a hex bit-string from a SMILES string.\n\n## Signatures\n\n- `morgan_fingerprint(smiles)` -- defaults `radius=2`, `nbits=2048`.\n- `morgan_fingerprint(smiles, radius, nbits)` -- explicit radius and bit length.\n\n## Usage\n\n```sql\nSELECT chem.main.morgan_fingerprint('CCO');            -- radius=2, nbits=2048\nSELECT chem.main.morgan_fingerprint('CCO', 3, 1024);   -- explicit\n```\n\n## Notes\n\nCompare two fingerprints with `tanimoto`. Only fingerprints built with the same `radius`/`nbits` are comparable. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Default Morgan fingerprint of ethanol (radius=2, nbits=2048)\", \"sql\": \"SELECT chem.main.morgan_fingerprint('CCO')\"}, {\"description\": \"Morgan fingerprint with explicit radius=3 and nbits=1024\", \"sql\": \"SELECT chem.main.morgan_fingerprint('CCO', 3, 1024)\"}]",
+        "vgi.executable_examples": "[{\"description\": \"Default Morgan fingerprint of ethanol (radius=2, nbits=2048).\", \"sql\": \"SELECT chem.main.morgan_fingerprint('CCO') AS fp\"}, {\"description\": \"Morgan fingerprint with an explicit radius and bit length.\", \"sql\": \"SELECT chem.main.morgan_fingerprint('CCO', 3, 1024) AS fp\"}]",
+        "vgi.keywords": "[\"morgan fingerprint\", \"ecfp\", \"fingerprint\", \"circular fingerprint\", \"bit vector\", \"radius\", \"nbits\", \"similarity\", \"features\"]",
+        "vgi.title": "Morgan Fingerprint (Hex)"
+      },
+      "VARCHAR",
+      [
+        "smiles",
+        "radius",
+        "nbits"
+      ],
+      [
+        "VARCHAR",
+        "BIGINT",
+        "BIGINT"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22605,
+      [
+        "SELECT chem.main.morgan_fingerprint('CCO', 3, 1024)"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "fingerprint"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "num_atoms",
+      null,
+      "scalar",
+      "Number of heavy (non-hydrogen) atoms, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## num_atoms\n\nCounts the **heavy (non-hydrogen) atoms** in a molecule from its SMILES.\n\n**Use it** as a simple size/complexity measure for filtering fragments vs. full molecules, or as a denominator for ligand-efficiency metrics.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `INTEGER` heavy-atom count, or `NULL` if invalid.\n\n**Edge cases**: implicit/explicit hydrogens are **not** counted -- only heavy atoms. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# num_atoms\n\nNumber of heavy (non-hydrogen) atoms from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.num_atoms('c1ccccc1');  -- 6 (benzene)\n```\n\n## Notes\n\nHydrogens are excluded. A handy molecular-size filter. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Heavy-atom count of benzene (6)\", \"sql\": \"SELECT chem.main.num_atoms('c1ccccc1')\"}]",
+        "vgi.keywords": "[\"heavy atom count\", \"num atoms\", \"atom count\", \"size\", \"fragment\", \"ligand efficiency\", \"descriptor\"]",
+        "vgi.title": "Heavy Atom Count"
+      },
+      "INTEGER",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22606,
+      [
+        "SELECT chem.main.num_atoms('c1ccccc1')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "num_h_acceptors",
+      null,
+      "scalar",
+      "Number of hydrogen-bond acceptors (Lipinski), or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## num_h_acceptors\n\nCounts the **hydrogen-bond acceptors** in a molecule from its SMILES, by the Lipinski definition (N and O atoms).\n\n**Use it** for drug-likeness screening; this is the Lipinski rule HBA <= 10.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `INTEGER` H-bond acceptor count, or `NULL` if invalid.\n\n**Edge cases**: uses the Lipinski (NO) count of nitrogen and oxygen atoms; pair with `num_h_donors` for the full picture. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# num_h_acceptors\n\nNumber of hydrogen-bond acceptors (Lipinski NO count) from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.num_h_acceptors('CCO');  -- 1 (ethanol O)\n```\n\n## Notes\n\nLipinski rule HBA <= 10. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"H-bond acceptors of ethanol\", \"sql\": \"SELECT chem.main.num_h_acceptors('CCO')\"}]",
+        "vgi.keywords": "[\"hydrogen bond acceptors\", \"hba\", \"h acceptors\", \"lipinski\", \"druglikeness\", \"descriptor\"]",
+        "vgi.title": "Hydrogen-Bond Acceptor Count"
+      },
+      "INTEGER",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22607,
+      [
+        "SELECT chem.main.num_h_acceptors('CCO')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "num_h_donors",
+      null,
+      "scalar",
+      "Number of hydrogen-bond donors (Lipinski), or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## num_h_donors\n\nCounts the **hydrogen-bond donors** in a molecule from its SMILES, by the Lipinski definition (N-H and O-H groups).\n\n**Use it** for drug-likeness screening; this is the Lipinski rule HBD <= 5.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `INTEGER` H-bond donor count, or `NULL` if invalid.\n\n**Edge cases**: uses the Lipinski (NHOH) count, which counts donor *groups*; pair with `num_h_acceptors` for the full HBD/HBA picture. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# num_h_donors\n\nNumber of hydrogen-bond donors (Lipinski NHOH count) from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.num_h_donors('CCO');  -- 1 (ethanol O-H)\n```\n\n## Notes\n\nLipinski rule HBD <= 5. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"H-bond donors of ethanol (1)\", \"sql\": \"SELECT chem.main.num_h_donors('CCO')\"}]",
+        "vgi.keywords": "[\"hydrogen bond donors\", \"hbd\", \"h donors\", \"lipinski\", \"nhoh\", \"druglikeness\", \"descriptor\"]",
+        "vgi.title": "Hydrogen-Bond Donor Count"
+      },
+      "INTEGER",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22608,
+      [
+        "SELECT chem.main.num_h_donors('CCO')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "num_rings",
+      null,
+      "scalar",
+      "Number of rings (SSSR ring count), or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## num_rings\n\nCounts the number of **rings** in a molecule from its SMILES, using the smallest set of smallest rings (SSSR).\n\n**Use it** to gauge molecular rigidity/complexity or to filter for acyclic vs. polycyclic structures.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `INTEGER` SSSR ring count, or `NULL` if invalid.\n\n**Edge cases**: SSSR is the conventional ring count; fused/bridged systems are counted by the SSSR convention rather than every possible cycle. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# num_rings\n\nRing count (smallest set of smallest rings) from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.num_rings('c1ccccc1');  -- 1 (benzene)\n```\n\n## Notes\n\nUses the SSSR convention. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Ring count of benzene (1)\", \"sql\": \"SELECT chem.main.num_rings('c1ccccc1')\"}]",
+        "vgi.keywords": "[\"ring count\", \"num rings\", \"sssr\", \"cycles\", \"aromatic\", \"polycyclic\", \"rigidity\", \"descriptor\"]",
+        "vgi.title": "Ring Count (SSSR)"
+      },
+      "INTEGER",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22609,
+      [
+        "SELECT chem.main.num_rings('c1ccccc1')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "num_rotatable_bonds",
+      null,
+      "scalar",
+      "Number of rotatable bonds, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## num_rotatable_bonds\n\nCounts the **rotatable bonds** in a molecule from its SMILES -- single, non-ring bonds between non-terminal heavy atoms.\n\n**Use it** as a flexibility metric; a low rotatable-bond count (Veber's rule, <= 10) correlates with good oral bioavailability.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `INTEGER` rotatable-bond count, or `NULL` if invalid.\n\n**Edge cases**: amide C-N bonds and terminal bonds are excluded per the standard RDKit definition. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# num_rotatable_bonds\n\nNumber of rotatable bonds from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.num_rotatable_bonds('CC(=O)OC1=CC=CC=C1C(=O)O');\n```\n\n## Notes\n\nA flexibility metric (Veber's rule). Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"Rotatable bonds of aspirin\", \"sql\": \"SELECT chem.main.num_rotatable_bonds('CC(=O)OC1=CC=CC=C1C(=O)O')\"}]",
+        "vgi.keywords": "[\"rotatable bonds\", \"flexibility\", \"veber\", \"bioavailability\", \"conformers\", \"descriptor\", \"druglikeness\"]",
+        "vgi.title": "Rotatable Bond Count"
+      },
+      "INTEGER",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22610,
+      [
+        "SELECT chem.main.num_rotatable_bonds('CC(=O)OC1=CC=CC=C1C(=O)O')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "substructure_match",
+      null,
+      "scalar",
+      "True if the molecule contains the SMARTS pattern. NULL if the SMILES is invalid OR the SMARTS pattern is invalid.",
+      null,
+      {
+        "vgi.category": "substructure",
+        "vgi.doc_llm": "## substructure_match\n\nTests whether a molecule (given as SMILES) **contains a substructure** described by a [SMARTS](https://www.daylight.com/dayhtml/doc/theory/theory.smarts.html) query pattern.\n\n**Use it** to filter compound sets by functional group or scaffold -- e.g. find every molecule containing a benzene ring or a carboxylic acid.\n\n- **Input**: a SMILES molecule and a SMARTS pattern (both `VARCHAR`).\n- **Output**: `BOOLEAN` -- `true` if the pattern matches, `false` if not.\n\n**Edge cases**: returns `NULL` if **either** the SMILES is invalid **or** the SMARTS pattern is invalid (a bad pattern is reported as `NULL`, never raised). `NULL` input returns `NULL`.",
+        "vgi.doc_md": "# substructure_match\n\nBoolean SMARTS substructure test over a SMILES molecule.\n\n## Usage\n\n```sql\nSELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1');  -- true (phenol has benzene)\n```\n\nUse it in a `WHERE` predicate to keep only compounds carrying a scaffold or functional group -- e.g. the carboxylic-acid SMARTS `[CX3](=O)[OX2H1]`.\n\n## Notes\n\nReturns `NULL` when the SMILES or the SMARTS is invalid; otherwise `true`/`false`.",
+        "vgi.example_queries": "[{\"description\": \"Phenol contains a benzene ring -> true\", \"sql\": \"SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1')\"}]",
+        "vgi.keywords": "[\"substructure\", \"smarts\", \"pattern match\", \"scaffold\", \"functional group\", \"contains\", \"filter\", \"substructure search\"]",
+        "vgi.title": "SMARTS Substructure Match"
+      },
+      "BOOLEAN",
+      [
+        "smiles",
+        "smarts"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22611,
+      [
+        "SELECT chem.main.substructure_match('c1ccccc1O', 'c1ccccc1')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "substructure"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "tanimoto",
+      null,
+      "scalar",
+      "Morgan/Tanimoto similarity in [0,1] (radius=2); NULL if either SMILES is invalid",
+      null,
+      {
+        "vgi.category": "similarity",
+        "vgi.doc_llm": "## tanimoto(a, b, radius)\n\nExplicit-radius arity of **Tanimoto similarity**: compare two molecules (from their SMILES) over Morgan fingerprints built at a caller-chosen `radius`, returning a value in [0, 1].\n\n**Use it** when you want similarity at a specific fingerprint resolution.\n\n- **Input**: two SMILES strings (`VARCHAR`) and a Morgan `radius` (`BIGINT`).\n- **Output**: `DOUBLE` similarity in [0, 1], or `NULL` if either SMILES is invalid.\n\n**Edge cases**: identical molecules score `1.0`; both fingerprints use the same `radius`. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# tanimoto (explicit radius)\n\nTanimoto similarity over Morgan fingerprints at a chosen `radius`.\n\n## Usage\n\n```sql\nSELECT chem.main.tanimoto('CCO', 'CCC', 2);\n```\n\n## Notes\n\nRange [0, 1]. Returns `NULL` if either input is invalid.",
+        "vgi.example_queries": "[{\"description\": \"Self-similarity is 1.0\", \"sql\": \"SELECT chem.main.tanimoto('CCO', 'CCO')\"}, {\"description\": \"Tanimoto similarity with radius=2\", \"sql\": \"SELECT chem.main.tanimoto('CCO', 'CCC', 2)\"}]",
+        "vgi.keywords": "[\"tanimoto\", \"similarity\", \"jaccard\", \"fingerprint similarity\", \"morgan\", \"radius\", \"nearest neighbor\", \"similarity search\"]",
+        "vgi.title": "Tanimoto Similarity Score"
+      },
+      "DOUBLE",
+      [
+        "smiles_a",
+        "smiles_b"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22612,
+      [
+        "SELECT chem.main.tanimoto('CCO', 'CCO')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "similarity"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "tanimoto",
+      null,
+      "scalar",
+      "Morgan/Tanimoto similarity in [0,1] with an explicit radius; NULL if either is invalid",
+      null,
+      {
+        "vgi.category": "similarity",
+        "vgi.doc_llm": "## tanimoto(a, b, radius)\n\nExplicit-radius arity of **Tanimoto similarity**: compare two molecules (from their SMILES) over Morgan fingerprints built at a caller-chosen `radius`, returning a value in [0, 1].\n\n**Use it** when you want similarity at a specific fingerprint resolution.\n\n- **Input**: two SMILES strings (`VARCHAR`) and a Morgan `radius` (`BIGINT`).\n- **Output**: `DOUBLE` similarity in [0, 1], or `NULL` if either SMILES is invalid.\n\n**Edge cases**: identical molecules score `1.0`; both fingerprints use the same `radius`. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# tanimoto (explicit radius)\n\nTanimoto similarity over Morgan fingerprints at a chosen `radius`.\n\n## Usage\n\n```sql\nSELECT chem.main.tanimoto('CCO', 'CCC', 2);\n```\n\n## Notes\n\nRange [0, 1]. Returns `NULL` if either input is invalid.",
+        "vgi.example_queries": "[{\"description\": \"Self-similarity is 1.0\", \"sql\": \"SELECT chem.main.tanimoto('CCO', 'CCO')\"}, {\"description\": \"Tanimoto similarity with radius=2\", \"sql\": \"SELECT chem.main.tanimoto('CCO', 'CCC', 2)\"}]",
+        "vgi.keywords": "[\"tanimoto\", \"similarity\", \"jaccard\", \"fingerprint similarity\", \"morgan\", \"radius\", \"nearest neighbor\", \"similarity search\"]",
+        "vgi.title": "Tanimoto Similarity Score"
+      },
+      "DOUBLE",
+      [
+        "smiles_a",
+        "smiles_b",
+        "radius"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR",
+        "BIGINT"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22612,
+      [
+        "SELECT chem.main.tanimoto('CCO', 'CCC', 2)"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "similarity"
+      ]
+    ],
+    [
+      "chem",
+      "22592",
+      "main",
+      "tpsa",
+      null,
+      "scalar",
+      "Topological polar surface area (TPSA) in Angstrom^2, or NULL if invalid",
+      null,
+      {
+        "vgi.category": "descriptors",
+        "vgi.doc_llm": "## tpsa\n\nComputes the **topological polar surface area (TPSA)** of a molecule, in square Angstroms, from its SMILES -- the surface area attributable to polar (N, O and attached H) atoms.\n\n**Use it** as a predictor of membrane permeability and oral absorption; TPSA below ~140 Angstrom^2 (and ~90 for CNS penetration) is a common drug-likeness filter.\n\n- **Input**: a SMILES string (`VARCHAR`).\n- **Output**: `DOUBLE` TPSA in Angstrom^2, or `NULL` if invalid.\n\n**Edge cases**: TPSA is a fast 2D topological estimate (Ertl method), not a 3D surface calculation. `NULL`/invalid input returns `NULL`.",
+        "vgi.doc_md": "# tpsa\n\nTopological polar surface area (Angstrom^2) from a SMILES string.\n\n## Usage\n\n```sql\nSELECT chem.main.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O');  -- ~63.6 for aspirin\n```\n\n## Notes\n\nA 2D topological estimate (Ertl). Lower TPSA generally predicts better permeability. Returns `NULL` on invalid input.",
+        "vgi.example_queries": "[{\"description\": \"TPSA of aspirin\", \"sql\": \"SELECT chem.main.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O')\"}]",
+        "vgi.keywords": "[\"tpsa\", \"polar surface area\", \"permeability\", \"absorption\", \"adme\", \"ertl\", \"descriptor\", \"druglikeness\"]",
+        "vgi.title": "Topological Polar Surface Area"
+      },
+      "DOUBLE",
+      [
+        "smiles"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22613,
+      [
+        "SELECT chem.main.tpsa('CC(=O)OC1=CC=CC=C1C(=O)O')"
+      ],
+      "CONSISTENT",
+      [
+        "chem",
+        "descriptors"
+      ]
+    ]
+  ]
+}

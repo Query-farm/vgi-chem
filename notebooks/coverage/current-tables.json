@@ -1,0 +1,49 @@
+{
+  "query": "SELECT * FROM duckdb_tables() WHERE database_name='chem' ORDER BY schema_name,table_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "schema_oid",
+    "table_name",
+    "table_oid",
+    "comment",
+    "tags",
+    "internal",
+    "temporary",
+    "has_primary_key",
+    "estimated_size",
+    "column_count",
+    "index_count",
+    "check_constraint_count",
+    "sql"
+  ],
+  "rows": [
+    [
+      "chem",
+      22592,
+      "main",
+      22593,
+      "example_molecules",
+      22746,
+      "Curated registry of well-known molecules with pre-computed descriptors (discovery table).",
+      {
+        "domain": "cheminformatics",
+        "vgi.category": "reference",
+        "vgi.doc_llm": "## `example_molecules` (table)\n\nA browsable registry of well-known molecules (water, ethanol, benzene, aspirin, caffeine, ibuprofen, glucose, paracetamol, nicotine, penicillin G, ...) with ready-computed descriptors, exposed as a regular table you can read without parentheses.\n\nColumns: `name` (primary key), `smiles`, `formula`, `mol_weight` (g/mol), `logp`, `tpsa` (Angstrom^2), `h_bond_donors`, `h_bond_acceptors`, `num_rings`, and `drug_like`. Read it to obtain valid SMILES strings to feed the scalar functions, or to compare descriptor ranges across common drugs. Backed by the identically named table function, so the rows are identical.",
+        "vgi.doc_md": "# `example_molecules`\n\nA curated, browsable registry of common molecules and their descriptors, exposed as a regular table you can read without parentheses -- the zero-argument discovery entry point for the `chem` catalog.\n\n## Columns\n\n- `name` (`VARCHAR`, primary key), `smiles`, `formula`\n- `mol_weight` (`DOUBLE`, g/mol), `logp` (`DOUBLE`), `tpsa` (`DOUBLE`, Angstrom^2)\n- `h_bond_donors`, `h_bond_acceptors`, `num_rings` (`INTEGER`)\n- `drug_like` (`BOOLEAN`) -- passes all four Lipinski rules\n\nRead it directly to discover valid SMILES inputs to feed the scalar functions, or to compare descriptor ranges across common drugs.",
+        "vgi.example_queries": "[{\"description\": \"Browse the built-in molecules from lightest to heaviest.\", \"sql\": \"SELECT name, formula, mol_weight FROM chem.main.example_molecules ORDER BY mol_weight\"}, {\"description\": \"How many example molecules are drug-like (pass all four Lipinski rules)?\", \"sql\": \"SELECT count(*) AS drug_like FROM chem.main.example_molecules WHERE drug_like\"}, {\"description\": \"All-pairs Tanimoto over the registry: its three most similar pairs -- paracetamol/phenol 0.292, benzene/phenol 0.273, aspirin/phenol 0.25\", \"sql\": \"SELECT a.name AS molecule_a, b.name AS molecule_b, round(chem.main.tanimoto(a.smiles, b.smiles), 3) AS similarity FROM chem.main.example_molecules AS a JOIN chem.main.example_molecules AS b ON a.name < b.name ORDER BY similarity DESC, molecule_a, molecule_b LIMIT 3\"}]",
+        "vgi.keywords": "[\"example\", \"molecules\", \"registry\", \"reference\", \"discovery\", \"smiles\", \"sample\", \"drug-like\", \"browse\", \"catalog\"]",
+        "vgi.title": "Example Molecule Registry Table"
+      },
+      false,
+      false,
+      true,
+      0,
+      10,
+      1,
+      0,
+      "CREATE TABLE example_molecules(\"name\" VARCHAR, smiles VARCHAR NOT NULL, formula VARCHAR NOT NULL, mol_weight DOUBLE, logp DOUBLE, tpsa DOUBLE, h_bond_donors INTEGER, h_bond_acceptors INTEGER, num_rings INTEGER, drug_like BOOLEAN, PRIMARY KEY(\"name\"));"
+    ]
+  ]
+}

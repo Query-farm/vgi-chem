@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "repository": "Query-farm/vgi-chem",
+  "revision": "8fa8501ff3a61781c132f4ea137b15f2e4b456d0",
+  "captured_at": "2026-11-14T20:06:45.790227+00:00",
+  "default_schema": "main",
+  "scope": "all_public_functions_and_tables",
+  "complete": true,
+  "evidence": [
+    {
+      "path": "coverage/current-functions.json",
+      "sha256": "7f979584ec47754162cad70f7b6a632ad63c35f9aeb484bec20ea5e92b740982",
+      "description": "Complete worker-filtered functions export through actual published Haybarn"
+    },
+    {
+      "path": "coverage/current-tables.json",
+      "sha256": "631521256a4704511d76f557357f01272c2e17013c968e2141e981c8cef6b457",
+      "description": "Complete worker-filtered tables export through actual published Haybarn"
+    },
+    {
+      "path": "coverage/current-views.json",
+      "sha256": "c5c42d6a38021bc8e787ef703bb02d50b9022c2ef86c8522679efe49e5aa47a1",
+      "description": "Complete worker-filtered views export through actual published Haybarn"
+    }
+  ],
+  "objects": [
+    {
+      "schema": "main",
+      "name": "canonical_smiles",
+      "kind": "function",
+      "signatures": [
+        "canonical_smiles(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "drug_like",
+      "kind": "function",
+      "signatures": [
+        "drug_like(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "exact_mass",
+      "kind": "function",
+      "signatures": [
+        "exact_mass(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "example_molecules",
+      "kind": "function",
+      "signatures": [
+        "example_molecules()"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "inchi",
+      "kind": "function",
+      "signatures": [
+        "inchi(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "inchikey",
+      "kind": "function",
+      "signatures": [
+        "inchikey(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "is_valid_smiles",
+      "kind": "function",
+      "signatures": [
+        "is_valid_smiles(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "lipinski",
+      "kind": "function",
+      "signatures": [
+        "lipinski(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "logp",
+      "kind": "function",
+      "signatures": [
+        "logp(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "mol_formula",
+      "kind": "function",
+      "signatures": [
+        "mol_formula(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "mol_weight",
+      "kind": "function",
+      "signatures": [
+        "mol_weight(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "morgan_fingerprint",
+      "kind": "function",
+      "signatures": [
+        "morgan_fingerprint(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "morgan_fingerprint",
+      "kind": "function",
+      "signatures": [
+        "morgan_fingerprint(VARCHAR, BIGINT, BIGINT)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "num_atoms",
+      "kind": "function",
+      "signatures": [
+        "num_atoms(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "num_h_acceptors",
+      "kind": "function",
+      "signatures": [
+        "num_h_acceptors(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "num_h_donors",
+      "kind": "function",
+      "signatures": [
+        "num_h_donors(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "num_rings",
+      "kind": "function",
+      "signatures": [
+        "num_rings(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "num_rotatable_bonds",
+      "kind": "function",
+      "signatures": [
+        "num_rotatable_bonds(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "substructure_match",
+      "kind": "function",
+      "signatures": [
+        "substructure_match(VARCHAR, VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "tanimoto",
+      "kind": "function",
+      "signatures": [
+        "tanimoto(VARCHAR, VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "tanimoto",
+      "kind": "function",
+      "signatures": [
+        "tanimoto(VARCHAR, VARCHAR, BIGINT)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "tpsa",
+      "kind": "function",
+      "signatures": [
+        "tpsa(VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "example_molecules",
+      "kind": "table",
+      "signatures": [
+        "TABLE"
+      ],
+      "authentication": "none",
+      "access": "read"
+    }
+  ]
+}
