@@ -6,7 +6,7 @@
 # See docker-entrypoint.sh. Keyless; RDKit cheminformatics runs locally in-process,
 # fully offline (no network, no model downloads). Stateless -- no persistent volume.
 # syntax=docker/dockerfile:1
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 ARG VERSION=0.0.0
 ARG GIT_COMMIT=unknown
