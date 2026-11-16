@@ -18,7 +18,7 @@ open-source cheminformatics toolkit.
 
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
-ATTACH 'chem' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.4.0 vgi-chem-worker');
+ATTACH 'chem' (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.4.1 vgi-chem-worker');
 
 SELECT chem.is_valid_smiles('CCO');                              -- true
 SELECT chem.canonical_smiles('OCC');                             -- 'CCO'
@@ -48,7 +48,7 @@ The worker isn't on PyPI; [uv](https://docs.astral.sh/uv/) runs it straight from
 INSTALL vgi FROM community;
 LOAD vgi;
 
-ATTACH 'chem' AS chem (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.4.0 vgi-chem-worker');
+ATTACH 'chem' AS chem (TYPE vgi, LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-chem@v0.4.1 vgi-chem-worker');
 
 -- Molecular formula of aspirin.
 SELECT chem.main.mol_formula('CC(=O)OC1=CC=CC=C1C(=O)O') AS formula;
